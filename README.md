@@ -1,1 +1,2 @@
 # Arkanoid
+Sample on SFML
