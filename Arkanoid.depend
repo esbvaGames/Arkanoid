@@ -1,0 +1,7 @@
+# depslib dependency file v1.0
+1597935198 source:c:\documents\codeblocks\arkanoid\main.cpp
+	<SFML/Graphics.hpp>
+	<SFML/Window.hpp>
+	<SFML/System.hpp>
+	<iostream>
+
