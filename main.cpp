@@ -4,6 +4,7 @@
 #include <SFML/System.hpp>
 
 #include <iostream>
+#include <map>
 
 enum CForce { forceLeft=1, forceRight, forceTop, forceDown };
 
@@ -11,6 +12,10 @@ enum CForce { forceLeft=1, forceRight, forceTop, forceDown };
 using namespace std;
 //. Para usar la librería SFML Espacio de Nombres.-
 using namespace sf;
+
+
+#include "LEVELS.h"
+
 
 int   Puntaje   = 0;
 bool  StartGame = false;
