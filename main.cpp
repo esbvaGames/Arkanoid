@@ -4,6 +4,9 @@
 #include <SFML/System.hpp>
 
 #include <iostream>
+#include <iomanip>
+#include <sstream>
+#include <fstream>
 #include <map>
 
 enum CForce { forceLeft=1, forceRight, forceTop, forceDown };
@@ -14,7 +17,48 @@ using namespace std;
 using namespace sf;
 
 
-#include "LEVELS.h"
+//#include "LEVELS.h"
+
+#define MAX_LEVEL 50
+#define MAX_FILAS 12    //. Niveles mas altos tienen mas filas
+#define MAX_COLMS 13
+int ARRAY_LEVEL[MAX_LEVEL][MAX_FILAS][MAX_COLMS] = {};
+
+struct DATA {
+   int   indice;
+   Color colors;
+   int   Golpes;
+   DATA() {};
+   DATA(int indice, Color colors, int Golpes){
+      this->indice = indice;
+      this->colors = colors;
+      this->Golpes = Golpes;
+   }
+};
+
+#define NUM_COLORS 10
+
+DATA data[NUM_COLORS] = {
+   { DATA(0, (Color)NULL,        0) },  //. 0 Vacio
+   { DATA(1, Color(  1,155,  0), 0) },  //. 1 Verde
+   { DATA(2, Color(  0,255,  0), 1) },  //. 2 Verde LT 1 Golpe
+   { DATA(3, Color(255,255,  0), 2) },  //. 3 Amarillo 2 Golpes
+   { DATA(4, Color(255,111,  0), 3) },  //. 4 Naranja  3 Golpes
+   { DATA(5, Color(255,  0,  0), 4) },  //. 5 Rojo     4 Golpes
+   { DATA(6, Color(255,  0,255), 5) },  //. 6 Rosa     5 Golpes
+   { DATA(7, Color(154,  0,255), 6) },  //. 7 fuccia   6 Golpes
+   { DATA(8, Color(  3,145,130), 7) },  //. 8 purple   7 Golpes
+   { DATA(9, Color( 74,134,232), 8) },  //. 9 cyanDK   8 Golpes
+   // ... Definir mas Colores aca ...
+};
+
+Color data_getColors(int idColor){
+   return data[idColor].colors;
+}
+
+int data_getGolpes(int idColor){
+   return data[idColor].Golpes;
+}
 
 
 int   Puntaje   = 0;
@@ -28,6 +72,16 @@ Color colorDoors  = Color( 0, 255, 255);
 
 Color colorRojo  = Color(255, 0, 0);
 Color colorVerde = Color(0, 255, 0);
+
+
+
+#define maxRange 100000 // es 10.1234
+#define minRange  20000 // es  2.1234
+#define rdMargen   1000
+float frand(){
+    return (float) (((rand()+rdMargen) % maxRange) + minRange) / 10000;
+}
+
 
 
 struct BLOCK {
@@ -57,8 +111,16 @@ struct BLOCK {
        return rcBlock;
     }
 
+    void set_idColor(int idColor, Color myColor){
+       this->idColor = idColor;
+       rcBlock.setFillColor(myColor);
+    }
+
+    int get_idColor(){ return idColor; }
+
 protected:
-    bool Activo = true;
+    int  idColor = 0;
+    bool Activo  = true;
     RectangleShape rcBlock;
 };
 
@@ -169,18 +231,18 @@ struct BOLA {
       if( !StartGame) { return; }
       if( !Activa ){
          Activa = true;
-         vx =  (rand() % 8) -4;
-         vy = -(rand() % 8);
+         vx =  frand();
+         vy = -frand();
       }
       px += vx;
       py += vy;
       rcBola.setPosition(px, py);
    }
 
-   void reboteLeft()  { vx =  ((rand() % 8) -4) +2; }
-   void reboteRight() { vx = -((rand() % 8) -4) -2; }
-   void reboteTop()   { vy =  ((rand() % 8) -4) +2; vx = ((rand() % 8) -4) +2; }
-   void reboteDown()  { vy = -((rand() % 8) -4) -2; vx = ((rand() % 8) -4) -2; }
+   void reboteLeft()  { vx =  frand(); vy = frand() -frand(); }
+   void reboteRight() { vx = -frand(); vy = frand() -frand(); }
+   void reboteTop()   { vy =  frand(); vx = frand() -frand(); }
+   void reboteDown()  { vy = -frand(); vx = frand() -frand(); }
 
 
    void Display(RenderWindow *win){
@@ -251,8 +313,8 @@ struct PLAYER{
 
 //. Calcular los Rectangulos de Colisiones
 bool isCollision(RectangleShape rcBola, RectangleShape rcBase, CForce *force){
-   Rect<float> myBola = Rect<float>(rcBola.getPosition().x, \
-                                    rcBola.getPosition().y, \
+   Rect<float> myBola = Rect<float>(rcBola.getPosition().x - rcBola.getOrigin().x, \
+                                    rcBola.getPosition().y - rcBola.getOrigin().y, \
                                     rcBola.getSize().x, \
                                     rcBola.getSize().y);
 
@@ -261,8 +323,8 @@ bool isCollision(RectangleShape rcBola, RectangleShape rcBase, CForce *force){
                                myBola.top  + rcBola.getOrigin().y);
 
    //. Obtiene los rectangulos de los Bordes o Bloques
-   Rect<float> myBase = Rect<float>(rcBase.getPosition().x, \
-                                    rcBase.getPosition().y, \
+   Rect<float> myBase = Rect<float>(rcBase.getPosition().x -rcBase.getOrigin().x, \
+                                    rcBase.getPosition().y -rcBase.getOrigin().y, \
                                     rcBase.getSize().x,\
                                     rcBase.getSize().y);
 
@@ -281,6 +343,90 @@ bool isCollision(RectangleShape rcBola, RectangleShape rcBase, CForce *force){
    return false;
 }
 
+/****** EDITOR DE BLOQUES DE NIVELES ******/
+bool isMouseInBlock(RenderWindow *win, BLOCK **block, int TOTAL, int *index){
+   bool Result = false;
+
+   RectangleShape rcShape;
+   Rect<float>    rcBlock;
+
+   int px = Mouse::getPosition(*win).x;    //. posicion relativa a la win
+   int py = Mouse::getPosition(*win).y;
+
+   for(int ndx = 0; ndx < TOTAL; ndx++){
+      rcShape = block[ndx]->getRectangle();
+      rcBlock = Rect<float>(rcShape.getPosition().x - rcShape.getOrigin().x, \
+                            rcShape.getPosition().y - rcShape.getOrigin().y, \
+                            rcShape.getSize().x, \
+                            rcShape.getSize().y);
+      if(rcBlock.contains(Vector2f(px, py))){
+         *index = ndx;
+         Result = true;
+         break;
+      }
+   }
+
+   return Result;
+}
+
+int index = -1;
+int INDEX = 0;
+int Wheel = 0;
+
+string fileSave = "./GameLevel.txt";
+
+
+#define fillZero(n)   setfill('0') << setw(n)
+
+
+void copyToArray(int level, BLOCK **block, int TOTAL){
+  int filas = 0;
+  int colms = 0;
+
+  for(int index=0; index < TOTAL; index++){
+     colms = index % MAX_COLMS;
+     filas = index / MAX_COLMS;
+
+     cout << "filas(" << filas << " colms(" << colms << ") " << block[index]->get_idColor() << endl;
+     ARRAY_LEVEL[level][filas][colms] = block[(TOTAL -1) -index]->get_idColor();
+  }
+}
+
+
+
+
+bool SaveToTexto(int FILAS=15){
+   ofstream mySave;
+
+   int level =  0;
+   int filas =  0;
+
+   mySave.open(fileSave);
+
+   if(mySave.is_open()){
+      mySave << "GameLevel {" << endl;
+      for(int level=0; level < MAX_LEVEL; level++){
+         mySave << "  Level: " << fillZero(2) << level << " filas: " << fillZero(2) << FILAS << endl;
+         for(int filas=0; filas < MAX_FILAS; filas++){
+            mySave << "    " << fillZero(2) << filas << " { ";
+            for(int colms=0; colms < MAX_COLMS; colms++){
+               mySave << ARRAY_LEVEL[level][filas][colms] << " ";
+               //cout << "level(" << level << ") filas(" << filas << ") colms(" << colms << ")" << endl;
+            }
+            mySave << " }" << endl;
+         }
+      }
+      mySave << "}";
+      mySave.close();
+   }
+}
+
+
+
+/******************************************/
+
+
+
 
 
 
@@ -288,6 +434,7 @@ int main()
 {
     sf::RenderWindow win(sf::VideoMode(800,480), "SFML Arkanoid by esbva");
     //. Solo a 60 cuadros x Segundos
+    srand(time(0)); //. Activa el sed random
     win.setFramerateLimit(60);
 
     //. Rectangulo  de Juego
@@ -304,6 +451,8 @@ int main()
     RectangleShape rcDoor_R = Create_Rectangle( 511, 380, 32, 64, colorDoors);
     //RectangleShape rcPlayer = Create_Rectangle( 250, 400, 64, 20, colorPlayer);
 
+    RectangleShape rcCube = Create_Rectangle(50, 320, 32,32, colorBorde);
+
     BOLA *rcBola = new BOLA(250, 398, 16,16, Color( 90, 90,255));
     PLAYER *rcPlayer = new PLAYER(250, 420, 64, 20, colorPlayer);
 
@@ -312,8 +461,8 @@ int main()
         cout << "Error leyendo fuente: Acme.ttf";
     }
 
-    int TOTAL = 10*13;
-    BLOCK **block = Create_Blocks(10, 13, 4,4);
+    int TOTAL = MAX_FILAS * MAX_COLMS;
+    BLOCK **block = Create_Blocks(MAX_FILAS, MAX_COLMS, 4,4);
 
     int LEVELS = 8*6;
     CIRCLE **level = Create_Levels(8, 6, font);
@@ -354,7 +503,34 @@ int main()
          if(Keyboard::isKeyPressed(Keyboard::Escape)){
             win.close();
          }
+         //.Mouse Rueda (Cambiar de Bloque)
+         if(evn.type == Event::MouseWheelMoved){
+            Wheel += evn.mouseWheel.delta;
+            Wheel  = min( Wheel, NUM_COLORS );
+            Wheel  = max( Wheel, 0);
+            cout << "Wheel: " << Wheel << endl;
+            rcCube.setFillColor( data_getColors(Wheel) );
+         }
 
+
+         if(isMouseInBlock(&win, block, TOTAL, &index)){
+            //. Seleccionar index
+            cout << index << endl;
+
+            //. insertar bloque
+            if(Mouse::isButtonPressed(Mouse::Left)){
+               block[index]->set_idColor(Wheel, data_getColors(Wheel));
+            }
+            //. eliminar bloque
+            if(Mouse::isButtonPressed(Mouse::Right)){
+               block[index]->set_idColor(0, (Color) NULL);
+            }
+         }
+
+         if(Keyboard::isKeyPressed(Keyboard::F2)){
+            copyToArray(0, block, TOTAL);
+            SaveToTexto();
+         }
       }
 
       win.clear(sf::Color(0,0,0));    //. Pinta la Window de Color Azul
@@ -374,6 +550,8 @@ int main()
       win.draw(rcDoor_L);
       win.draw(rcDoor_R);
 
+      //. Solo en el modo de edicion
+      win.draw(rcCube);
 
       rcBola->Update();
 
@@ -409,9 +587,10 @@ int main()
 
             Puntaje +=1;
             cout << "Acierto del Player: " << Puntaje << endl;
-            char buffer[5]="";
-            sprintf(buffer, " Puntos: %-6i", Puntaje);
-            puntos.setString(string(buffer));
+
+            ostringstream buffer;
+            buffer << "Puntos: " << setfill('0') << setw(6) << Puntaje;
+            puntos.setString(string(buffer.str()));
          }
 
       rcBola->Display(&win);

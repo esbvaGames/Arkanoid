@@ -1,13 +1,15 @@
 # depslib dependency file v1.0
-1598230696 source:c:\documents\codeblocks\arkanoid\main.cpp
+1598400518 source:c:\documents\codeblocks\arkanoid\main.cpp
 	<SFML/Graphics.hpp>
 	<SFML/Window.hpp>
 	<SFML/System.hpp>
 	<iostream>
+	<iomanip>
+	<sstream>
+	<fstream>
 	<map>
-	"LEVELS.h"
 
-1598234849 c:\documents\codeblocks\arkanoid\levels.h
+1598399889 c:\documents\codeblocks\arkanoid\levels.h
 	<SFML/Graphics.hpp>
 	<SFML/Window.hpp>
 	<SFML/System.hpp>
