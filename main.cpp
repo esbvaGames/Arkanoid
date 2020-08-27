@@ -63,6 +63,7 @@ int data_getGolpes(int idColor){
 
 int   Puntaje   = 0;
 bool  StartGame = false;
+bool  ModoEditar = true;
 
 Color colorBorde = Color( 74, 134, 232);
 Color colorBlock = Color(255,  90,  90);
@@ -73,16 +74,20 @@ Color colorDoors  = Color( 0, 255, 255);
 Color colorRojo  = Color(255, 0, 0);
 Color colorVerde = Color(0, 255, 0);
 
+Color colorBorde_alpha = Color(74, 134, 232, 130);
+Color colorSelect = Color(0,255,0);
+Color colorSelect_alpha = Color(0,255,0, 130);
+Color colorPressed = Color(0,255,255);
+Color colorPressed_alpha = Color(0,255,255,130);
 
 
 #define maxRange 100000 // es 10.1234
 #define minRange  20000 // es  2.1234
 #define rdMargen   1000
+
 float frand(){
     return (float) (((rand()+rdMargen) % maxRange) + minRange) / 10000;
 }
-
-
 
 struct BLOCK {
     //. Constructor que no hace nada, es una formalidad
@@ -264,9 +269,6 @@ protected:
 };
 
 
-
-
-
 //. CONTROL DEL PLAYER
 struct PLAYER{
    float px, py;
@@ -375,7 +377,6 @@ int Wheel = 0;
 
 string fileSave = "./GameLevel.txt";
 
-
 #define fillZero(n)   setfill('0') << setw(n)
 
 
@@ -391,9 +392,6 @@ void copyToArray(int level, BLOCK **block, int TOTAL){
      ARRAY_LEVEL[level][filas][colms] = block[(TOTAL -1) -index]->get_idColor();
   }
 }
-
-
-
 
 bool SaveToTexto(int FILAS=15){
    ofstream mySave;
@@ -477,13 +475,75 @@ void CopyFromArray(int level, BLOCK **block, int TOTAL){
    }
 }
 
-
-
-
-
 /******************************************/
 
+Text Create_Label(float px, float py, string texto, Font *font, float Scale){
+   Text label = Text(texto, *font, Scale);
+   label.setFillColor(colorYellow);
+   label.setPosition(px, py);
 
+   return label;
+}
+
+struct BUTTON {
+   BUTTON() {};
+   BUTTON(float px, float py, float width, float height, \
+          string texto, Font *font, float Scale){
+      rcButton = Create_Rectangle(px, py, width, height, colorBorde, colorBorde_alpha);
+      label    = Create_Label(0,0, texto, &*font, Scale);
+      float bx = (width - label.getLocalBounds().width ) / 2.0f;
+      float by = (height - label.getLocalBounds().height) / 3.5f;
+      label.setPosition(px + bx, py + by);
+      label.setFillColor(colorBorde);
+      area = Rect<float>(px, py, width, height);
+   }
+   void Update(RenderWindow *win){
+      float mx = Mouse::getPosition(*win).x;
+      float my = Mouse::getPosition(*win).y;
+      if(area.contains(Vector2f(mx, my))){
+         state = STATE::Select;
+         if(Mouse::isButtonPressed(Mouse::Left)){
+            state = STATE::Pressed;
+         }
+      } else {
+         state = STATE::Normal;
+      }
+   }
+
+   void Display(RenderWindow *win){
+      switch(state){
+      case STATE::Select:
+         rcButton.setFillColor(colorSelect_alpha);
+         rcButton.setOutlineColor(colorSelect);
+         label.setFillColor(colorSelect);
+         break;
+
+      case STATE::Pressed:
+         rcButton.setFillColor(colorPressed_alpha);
+         rcButton.setOutlineColor(colorPressed);
+         label.setFillColor(colorPressed);
+         break;
+
+      default:
+         rcButton.setFillColor(colorBorde_alpha);
+         rcButton.setOutlineColor(colorBorde);
+         label.setFillColor(colorBorde);
+      }
+      win->draw(rcButton);
+      win->draw(label);
+   }
+
+   bool isPressed(){
+      return (state == STATE::Pressed) ? true : false;
+   }
+
+protected:
+   enum  STATE {Normal, Select, Pressed};
+   STATE state = STATE::Normal;
+   Text             label;
+   Rect<float>      area;
+   RectangleShape   rcButton;
+};
 
 
 
@@ -509,7 +569,6 @@ int main()
     RectangleShape rcDoor_R = Create_Rectangle( 511, 380, 32, 64, colorDoors);
     //RectangleShape rcPlayer = Create_Rectangle( 250, 400, 64, 20, colorPlayer);
 
-    RectangleShape rcCube = Create_Rectangle(50, 320, 32,32, colorBorde);
 
     BOLA *rcBola = new BOLA(250, 398, 16,16, Color( 90, 90,255));
     PLAYER *rcPlayer = new PLAYER(250, 420, 64, 20, colorPlayer);
@@ -526,29 +585,26 @@ int main()
     CIRCLE **level = Create_Levels(8, 6, font);
 
     //. Rectangulo del Menu
-    RectangleShape rcMenu = Create_Rectangle(560, 4, 234, 470, colorBorde);
+    RectangleShape rcMenu = Create_Rectangle(560,   4, 234, 470, colorBorde);
 
+    //.Requiere la direccion de la fuente, para no copiarla.
+    Text titulo = Create_Label(600, 10, "Arkanoid.-", &font, 30);
+    Text puntos = Create_Label(600, 60, "Puntos: 000000", &font, 20);
+    Text vidas = Create_Label(600, 90, "Vidas ..: 00", &font, 20);
 
-    Text titulo;
-    titulo.setFont(font);
-    titulo.setString("Arkanoid.-");
-    titulo.setPosition(600, 10);
-    titulo.setFillColor(colorYellow);
+    //. Rectangulo de Editor.
+    RectangleShape rcEdit = Create_Rectangle(46, 310, 466, 158, colorBorde, Color(34,38,38));
+    RectangleShape rcCube = Create_Rectangle(100, 342, 32,32, colorBorde);
 
-    Text puntos;
-    puntos.setFont(font);
-    puntos.setString("Puntos: 000000");
-    puntos.setPosition(600, 60);
-    puntos.setScale(Vector2f(0.6, 0.6));
-    puntos.setFillColor(colorYellow);
+    Text idBlock = Create_Label(106, 320, "00", &font, 15);
+    Text label_1 = Create_Label(220, 310, "Modo Edicion", &font, 20);
+    Text label_2 = Create_Label(150, 340, "Rueda para cambiar Bloque", &font, 15);
+    Text label_3 = Create_Label(150, 360, "Click en Numeros para Cambiar-Nivel", &font, 15);
+    Text label_4 = Create_Label(150, 390, "Editando Nivel: 00", &font, 15);
 
-    Text vidas;
-    vidas.setFont(font);
-    vidas.setString("Vidas .: 00");
-    vidas.setPosition(600, 90);
-    vidas.setScale(Vector2f(0.6, 0.6));
-    vidas.setFillColor(colorYellow);
-
+    BUTTON *Guardar = new BUTTON(310, 386, 70, 25, "Guardar", &font, 14);
+    BUTTON *Cargar  = new BUTTON(400, 386, 70, 25, "Cargar", &font, 14);
+    BUTTON *Salir   = new BUTTON(230, 425, 70, 25, "Salir", &font, 14);
 
     while(win.isOpen()){
 
@@ -561,41 +617,65 @@ int main()
          if(Keyboard::isKeyPressed(Keyboard::Escape)){
             win.close();
          }
-         //.Mouse Rueda (Cambiar de Bloque)
-         if(evn.type == Event::MouseWheelMoved){
-            Wheel += evn.mouseWheel.delta;
-            Wheel  = min( Wheel, NUM_COLORS );
-            Wheel  = max( Wheel, 0);
-            cout << "Wheel: " << Wheel << endl;
-            rcCube.setFillColor( data_getColors(Wheel) );
+
+         //. Activar Modo-Editar
+         if(Keyboard::isKeyPressed(Keyboard::F12)){
+            ModoEditar = !ModoEditar;   //. Invertir estado (true | false)
+            cout << "ModoEditar: " << ModoEditar << endl;
          }
 
 
-         if(isMouseInBlock(&win, block, TOTAL, &index)){
-            //. Seleccionar index
-            cout << index << endl;
+         if(ModoEditar){
+            //.Mouse Rueda (Cambiar de Bloque)
+            if(evn.type == Event::MouseWheelMoved){
+               Wheel += evn.mouseWheel.delta;
+               Wheel  = min( Wheel, NUM_COLORS );
+               Wheel  = max( Wheel, 0);
+               cout << "Wheel: " << Wheel << endl;
+               rcCube.setFillColor( data_getColors(Wheel) );
 
-            //. insertar bloque
-            if(Mouse::isButtonPressed(Mouse::Left)){
-               block[index]->set_idColor(Wheel, data_getColors(Wheel));
+               ostringstream buffer;
+               buffer << setfill('0') << setw(2) << Wheel;
+               idBlock.setString(buffer.str());
             }
-            //. eliminar bloque
-            if(Mouse::isButtonPressed(Mouse::Right)){
-               block[index]->set_idColor(0, (Color) NULL);
+
+
+            if(isMouseInBlock(&win, block, TOTAL, &index)){
+               //. Seleccionar index
+               cout << index << endl;
+
+               //. insertar bloque
+               if(Mouse::isButtonPressed(Mouse::Left)){
+                  block[index]->set_idColor(Wheel, data_getColors(Wheel));
+               }
+               //. eliminar bloque
+               if(Mouse::isButtonPressed(Mouse::Right)){
+                  block[index]->set_idColor(0, (Color) NULL);
+               }
             }
-         }
 
-         if(Keyboard::isKeyPressed(Keyboard::F2)){
-            copyToArray(0, block, TOTAL);
-            SaveToTexto();
-         }
+            Guardar->Update(&win);
+            if(Guardar->isPressed()){
+               cout << "Guardar Archivo" << endl;
+               copyToArray(0, block, TOTAL);
+               SaveToTexto();
+            }
 
-         if(Keyboard::isKeyPressed(Keyboard::F3)){
-            loadFromFile();
-            CopyFromArray(0, block, TOTAL);
-         }
 
-      }
+            Cargar->Update(&win);
+            if(Cargar->isPressed()){
+               cout << "Cargar Archivo" << endl;
+               loadFromFile();
+               CopyFromArray(0, block, TOTAL);
+            }
+
+
+            Salir->Update(&win);
+            if(Salir->isPressed()){
+               ModoEditar = false;
+            }
+         } //. End Modo-Editar
+      }  //. end Cyclo de Eventos
 
       win.clear(sf::Color(0,0,0));    //. Pinta la Window de Color Azul
 
@@ -614,12 +694,25 @@ int main()
       win.draw(rcDoor_L);
       win.draw(rcDoor_R);
 
+      CForce force;
       //. Solo en el modo de edicion
-      win.draw(rcCube);
+      if(ModoEditar){
+         win.draw(rcEdit);
+         win.draw(rcCube);
+         win.draw(label_1);
+         win.draw(label_2);
+         win.draw(label_3);
+         win.draw(label_4);
+         win.draw(idBlock);
+         Guardar->Display(&win);
+         Cargar->Display(&win);
+         Salir->Display(&win);
 
-      rcBola->Update();
 
-         CForce force;
+      } else {
+         //. Modo Normal de Juego
+         rcBola->Update();
+
          if(isCollision(rcBola->getRectangle(), rcLeft, &force)){
             cout << "Colision left: " << force << endl;
             rcBola->reboteLeft();
@@ -640,8 +733,6 @@ int main()
             rcBola->reboteDown();
          }
 
-
-
          rcPlayer->Update();
          rcPlayer->Display(&win);
          if(isCollision(rcBola->getRectangle(), rcPlayer->getRectangle(), &force)){
@@ -656,8 +747,9 @@ int main()
             buffer << "Puntos: " << setfill('0') << setw(6) << Puntaje;
             puntos.setString(string(buffer.str()));
          }
+         rcBola->Display(&win);
 
-      rcBola->Display(&win);
+      }  //. end Modo-Editar.-
 
 
 
