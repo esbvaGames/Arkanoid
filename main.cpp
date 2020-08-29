@@ -64,6 +64,7 @@ int data_getGolpes(int idColor){
 int   Puntaje   = 0;
 bool  StartGame = false;
 bool  ModoEditar = true;
+bool  Mouse_in_block = false;
 
 Color colorBorde = Color( 74, 134, 232);
 Color colorBlock = Color(255,  90,  90);
@@ -72,13 +73,14 @@ Color colorPlayer = Color(90, 255, 90);
 Color colorDoors  = Color( 0, 255, 255);
 
 Color colorRojo  = Color(255, 0, 0);
+Color colorRojo_alpha = Color(255,0,0, 40);
 Color colorVerde = Color(0, 255, 0);
 
-Color colorBorde_alpha = Color(74, 134, 232, 130);
+Color colorBorde_alpha = Color(74, 134, 232, 40);
 Color colorSelect = Color(0,255,0);
-Color colorSelect_alpha = Color(0,255,0, 130);
+Color colorSelect_alpha = Color(0,255,0, 40);
 Color colorPressed = Color(0,255,255);
-Color colorPressed_alpha = Color(0,255,255,130);
+Color colorPressed_alpha = Color(0,255,255,40);
 
 
 #define maxRange 100000 // es 10.1234
@@ -155,15 +157,62 @@ struct CIRCLE {
 
     CIRCLE(float px, float py, Color myColor = (Color)NULL){
         rcCircle.setPosition(px, py);
-        rcCircle.setRadius(16);
-        rcCircle.setFillColor(colorRojo);
-        rcCircle.setOutlineColor(colorVerde);
-        rcCircle.setOutlineThickness(1);
+        rcCircle.setRadius(15);
+        rcCircle.setFillColor(colorRojo_alpha);
+        rcCircle.setOutlineColor(colorRojo);
+        rcCircle.setOutlineThickness(2);
         this->px = px;
         this->py = py;
+        //. La mitad despues del centro de circulo.
+        area = Rect<float>(px -4, py -4, 32, 32);
     }
 
+    void Update(RenderWindow *win){
+       float mx = Mouse::getPosition(*win).x;
+       float my = Mouse::getPosition(*win).y;
+
+       if(area.contains(Vector2f(mx, my))){
+          if(state != STATE::Pressed){
+             state = STATE::Select;
+          }
+
+       } else {
+          if(state != STATE::Pressed){
+             state = STATE::Normal;
+          }
+       }
+    }
+
+    bool isSelected() {
+       return ((state == STATE::Select) ? true : false);
+    }
+    void Set_Pressed(){  state = STATE::Pressed;  }
+    void Set_Normal() {  state = STATE::Normal;   }
+
     void Display(RenderWindow *win){
+        switch(state){
+        case STATE::Select:
+           rcCircle.setFillColor(colorSelect_alpha);
+           rcCircle.setOutlineColor(colorSelect);
+           break;
+
+        case STATE::Pressed:
+           rcCircle.setFillColor(colorPressed_alpha);
+           rcCircle.setOutlineColor(colorPressed);
+           break;
+
+        default:
+           if(state != STATE::Pressed){
+              if(ModoEditar){
+                 rcCircle.setFillColor(colorBorde_alpha);
+                 rcCircle.setOutlineColor(colorBorde);
+              } else {
+                 rcCircle.setFillColor(colorRojo_alpha);
+                 rcCircle.setOutlineColor(colorRojo);
+              }
+           }
+        }
+
         win->draw(rcCircle);
         win->draw(prompt);
     }
@@ -171,13 +220,36 @@ struct CIRCLE {
     void setTexto(string texto, Font font, float Scale = 12){
         this->font = font ;            //. Guarda una copia de la fuente
         prompt = Text(texto, this->font, Scale);
-        prompt.setPosition(px +8, py +8);
+        float bx = (32 - prompt.getLocalBounds().width) / 2.5f;
+        float by = (32 - prompt.getLocalBounds().height) / 2.5f;
+        prompt.setPosition(px +bx, py +by);
         prompt.setFillColor(colorYellow);
     }
 private:
+    enum          STATE {Disabled, Normal, Select, Pressed};
+    STATE         state = STATE::Normal;
+    Rect<float>   area;
     float px, py;
 
 };
+
+bool isMouseInLevel(RenderWindow *win, CIRCLE **level, int TOTAL, int *indice){
+   bool Result = false;
+
+   *indice = -1;
+   for(int index=0; index < TOTAL; index++){
+      level[index]->Update(&*win);
+
+      if(level[index]->isSelected() ){
+         *indice = index;
+         Result = true;
+      }
+   }
+   return Result;
+
+}
+
+
 
 
 //. Contenedor para los botones de Niveles.
@@ -374,6 +446,8 @@ bool isMouseInBlock(RenderWindow *win, BLOCK **block, int TOTAL, int *index){
 int index = -1;
 int INDEX = 0;
 int Wheel = 0;
+int SELECTO = 0;
+int Selecto = 0;
 
 string fileSave = "./GameLevel.txt";
 
@@ -387,8 +461,7 @@ void copyToArray(int level, BLOCK **block, int TOTAL){
   for(int index=0; index < TOTAL; index++){
      colms = index % MAX_COLMS;
      filas = index / MAX_COLMS;
-
-     cout << "filas(" << filas << " colms(" << colms << ") " << block[index]->get_idColor() << endl;
+     //cout << "filas(" << filas << " colms(" << colms << ") " << block[index]->get_idColor() << endl;
      ARRAY_LEVEL[level][filas][colms] = block[(TOTAL -1) -index]->get_idColor();
   }
 }
@@ -409,7 +482,7 @@ bool SaveToTexto(int FILAS=15){
             mySave << "    " << fillZero(2) << filas << " { ";
             for(int colms=0; colms < MAX_COLMS; colms++){
                mySave << ARRAY_LEVEL[level][filas][colms] << " ";
-               //cout << "level(" << level << ") filas(" << filas << ") colms(" << colms << ")" << endl;
+               cout << "level(" << level << ") filas(" << filas << ") colms(" << colms << ")" << endl;
             }
             mySave << " }" << endl;
          }
@@ -639,7 +712,7 @@ int main()
                idBlock.setString(buffer.str());
             }
 
-
+            //. Mouse en los Bloques
             if(isMouseInBlock(&win, block, TOTAL, &index)){
                //. Seleccionar index
                cout << index << endl;
@@ -652,6 +725,31 @@ int main()
                if(Mouse::isButtonPressed(Mouse::Right)){
                   block[index]->set_idColor(0, (Color) NULL);
                }
+
+            //. Mouse en los Niveles
+            } else if(isMouseInLevel(&win, level, LEVELS, &Selecto)){
+
+               if(Mouse::isButtonPressed(Mouse::Left)){
+                  //. Asegura que el Click Cambia una sola vez.
+                  if(Selecto != -1){
+                     if(SELECTO != Selecto){
+                        //. Desmarca el Anterior
+                        level[SELECTO]->Set_Normal();
+                        //. MArca el Actual Seleccionado.
+                        level[Selecto]->Set_Pressed();
+                        //. Copia los bloques Actuales al Array
+                        copyToArray(SELECTO, block, TOTAL);
+                        SELECTO  = Selecto;
+                        cout << "Nivel Selecto: " << Selecto << endl;
+                        //. Copia desde el Array los bloques.-
+                        CopyFromArray(Selecto, block, TOTAL);
+
+                        ostringstream buffer;
+                        buffer << "Editando Nivel: " << fillZero(2) << Selecto +1;
+                        label_4.setString(buffer.str());
+                     } //. Fin, Cambio de Nivel
+                  } //. Fin, posible Seleccion
+               } //. Mouse Pressed
             }
 
             Guardar->Update(&win);
