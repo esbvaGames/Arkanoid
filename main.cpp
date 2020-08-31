@@ -273,13 +273,17 @@ CIRCLE **Create_Levels(int FILAS, int COLMS, Font font){
     return level;
 }
 
-//. Rectangulo de Menu
-//. El color de relleno se sobrepone al color del objeto anterior
-//. Dal lo mismo si se rellena con el color de fondo Negro
-//. Para anular el color de fondo se usa un parametro a NULL.-
-//. El color de relleno sera anulado a menos que se especifique en el
-//. ultimo parametro.-
-
+/** \brief Crea una forma grafica rectangular
+ *
+ * \param   px: posicion en x
+ * \param   py: posicion en y
+ * \param   width: ancho
+ * \param   height: alto
+ * \param   myColor: color de los bordes
+ * \param   myRelleno: color de relleno (NULL) Predeterminado
+ * \return  RectangleShape
+ *
+ */
 RectangleShape Create_Rectangle(float px, float py, float width, float height, \
                                 Color myColor, Color myRelleno = (Color)NULL){
     RectangleShape rcBase;
@@ -548,7 +552,17 @@ void CopyFromArray(int level, BLOCK **block, int TOTAL){
    }
 }
 
-/******************************************/
+
+/** \brief  Crea una etiqueta de texto
+ *
+ * \param   px: posicion en x
+ * \param   py: posicion en y
+ * \param   texto: texto de la etiqueta
+ * \param   &font: direccion de la fuente
+ * \param   Scale: escala del texto
+ * \return  Text
+ *
+ */
 
 Text Create_Label(float px, float py, string texto, Font *font, float Scale){
    Text label = Text(texto, *font, Scale);
@@ -618,6 +632,107 @@ protected:
    RectangleShape   rcButton;
 };
 
+/***** CONTROL DE ANIMACIONES *****/
+struct ANIMATION{
+   ANIMATION() {};
+
+   ANIMATION(Image *image, IntRect area, int filas, int colms){
+      texture.loadFromImage(*image, area);
+      this->filas = filas;
+      this->colms = colms;
+      this->height = area.height / filas;
+      this->width  = area.width  / colms;
+      this->TOTAL  = filas * colms;
+
+      IntRect region(0,0,width,height);
+
+      sprites = (Sprite **) new Sprite[TOTAL];
+      for(int index=0; index < TOTAL; index++){
+         region.left = (index % colms) * width;
+         region.top  = (index / colms) * height;
+         region.width = width;
+         region.height = height;
+         sprites[index] = new Sprite(texture, region);
+         cout << "region:(" << fillZero(3) << region.left <<","<< \
+                               fillZero(3) << region.top <<")" << endl;
+      }
+      modo = MODO::Normal;
+      setElapsed( 0.15 );
+   }
+
+   void setElapsed(float factor){
+      this->factor = factor;
+      delta = seconds(0.1f);
+      lapso = delta.asSeconds() + factor;
+   }
+
+
+   void Display(RenderWindow *win){
+      if(modo == MODO::Back){
+        UpdateBack();
+      } else {
+        UpdatePlay();
+      }
+      sprites[index]->setPosition(px, py);
+      win->draw(*sprites[index]);
+   }
+
+   void setPosition(float px, float py){
+      this->px = px;
+      this->py = py;
+   }
+
+   Vector2f  getPosition(){
+      return Vector2f(px, py);
+   }
+
+   enum MODO { Normal, Back};
+   void setModo(MODO modo){
+      this->modo = modo;
+   }
+
+protected:
+   bool  isTimeLapse(){
+      lapso -= delta.asSeconds();
+      if(lapso <= 0.0f){
+         lapso = delta.asSeconds() + factor;
+         return true;
+      }
+      return false;
+   }
+
+
+   bool UpdatePlay(){
+      if ( !isTimeLapse() ) { return false; }
+      index = ((index+1 < TOTAL) ? index +1 : 0);   //. Ciclo hacia adelante
+      return  ((index == TOTAL -1) ? true : false);  //. True en el ultimo Frame
+   }
+
+   bool UpdateBack(){
+      if( !isTimeLapse() ) { return false; }
+      index = ((index > 0000) ? index -1 : TOTAL -1); //. Ciclo hacia atras
+      return  ((index == 0000) ? true : false);       //. True si llega al 000
+
+   }
+
+private:
+   MODO        modo = MODO::Normal;
+   float       px = 0, py =0;
+   int         index = 0;
+   int         TOTAL = 0;
+   int         filas, height;
+   int         colms, width;
+   Texture     texture;
+   Sprite      **sprites;        //. Array de Sprites
+   Time        delta;
+   float       lapso;
+   float       factor;
+
+};
+
+map<string, ANIMATION *> TABLA;
+map<string, ANIMATION *>::iterator it;
+
 
 
 
@@ -678,6 +793,44 @@ int main()
     BUTTON *Guardar = new BUTTON(310, 386, 70, 25, "Guardar", &font, 14);
     BUTTON *Cargar  = new BUTTON(400, 386, 70, 25, "Cargar", &font, 14);
     BUTTON *Salir   = new BUTTON(230, 425, 70, 25, "Salir", &font, 14);
+
+    //. Prueba de Animaciones ///
+    Image imagen;
+    if( !imagen.loadFromFile("./arinoid.bmp")){
+      cout << "Error leyendo imagen: arinoid.bmp" << endl;
+    }
+
+    ANIMATION *explode = new ANIMATION(&imagen, IntRect(0, 160, 224, 32), 1, 7);
+    TABLA.insert(make_pair("X", explode));
+
+    ANIMATION *bomb = new ANIMATION(&imagen, IntRect(0,128, 256, 32), 1, 8);
+    bomb->setModo(ANIMATION::MODO::Back);
+    bomb->setElapsed(0.25f);
+    bomb->setPosition(50, 1);
+    TABLA.insert(make_pair("M", bomb));
+
+    ANIMATION *vtmO = new ANIMATION(&imagen, IntRect(0, 192, 32, 224), 7, 1);
+    vtmO->setElapsed(0.5f);
+    vtmO->setPosition(100, 1);
+    TABLA.insert(make_pair("O", vtmO));
+
+    ANIMATION *vtmB = new ANIMATION(&imagen, IntRect(32, 192, 32, 224), 7, 1);
+    vtmB->setElapsed(0.25f);
+    vtmB->setModo(ANIMATION::MODO::Back);
+    vtmB->setPosition(150, 1);
+    TABLA.insert(make_pair("B", vtmB));
+
+    ANIMATION *vtmA = new ANIMATION(&imagen, IntRect(64, 192, 32, 224), 7, 1);
+    vtmA->setElapsed(0.25f);
+    vtmA->setPosition(200, 1);
+    TABLA.insert(make_pair("A", vtmA));
+
+    ANIMATION *vtmC = new ANIMATION(&imagen, IntRect(96, 192, 32, 224), 7, 1);
+    vtmC->setElapsed(0.5f);
+    vtmC->setModo(ANIMATION::MODO::Back);
+    vtmC->setPosition(250, 1);
+    TABLA.insert(make_pair("C", vtmC));
+
 
     while(win.isOpen()){
 
@@ -871,6 +1024,14 @@ int main()
         }
         block[index]->Display(&win);
       }
+
+      //. Desplieque de Animaciones
+      for( it = TABLA.begin(); it != TABLA.end(); ++it){
+         ((ANIMATION*)it->second)->Display(&win);
+      }
+
+
+
       win.display();
 
     }

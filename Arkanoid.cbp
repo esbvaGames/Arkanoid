@@ -41,6 +41,7 @@
 			<Add option="-fexceptions" />
 		</Compiler>
 		<Unit filename="GameLevel.txt" />
+		<Unit filename="arinoid.bmp" />
 		<Unit filename="main.cpp" />
 		<Extensions>
 			<lib_finder disable_auto="1" />
