@@ -686,6 +686,9 @@ struct ANIMATION{
       return Vector2f(px, py);
    }
 
+   float getWidth()  { return width;   }
+   float getHeight() { return height; }
+
    enum MODO { Normal, Back};
    void setModo(MODO modo){
       this->modo = modo;
@@ -733,7 +736,152 @@ private:
 map<string, ANIMATION *> TABLA;
 map<string, ANIMATION *>::iterator it;
 
+/**** ESTRUCTURA DE ENTIDADES, BONOS Y ENEMIGOS *****/
+typedef void (callback) (void *);
 
+struct ENTIDAD {
+   ENTIDAD() {}
+
+   virtual void Update() = 0;
+   virtual void Display(RenderWindow *win) = 0;
+
+   enum ENTY {Bonus, Enemy, Power};
+
+   void SetVelocity(float vx, float vy, ENTY idTipo){
+      this->vx = vx;
+      this->vy = vy;
+      this->idTipo = idTipo;
+   }
+
+   bool isCollision(RectangleShape spOther){
+      Rect<float> rcOther(spOther.getPosition().x - spOther.getOrigin().x, \
+                          spOther.getPosition().y - spOther.getOrigin().y, \
+                          spOther.getSize().x, \
+                          spOther.getSize().y);
+      if(area.intersects(rcOther)){
+         return true;
+      }
+      return false;
+   }
+
+   void SetCommand(callback *command){
+      this->command = command;
+   }
+
+   void On_Command(void *data){
+      command(data);
+   }
+
+   ENTY get_idTipo() { return idTipo; }
+
+protected:
+   void SetAnimation(ANIMATION *anim){
+      this->anim = anim;      /**< asigna la animacion    */
+      SetCollider();          /**< asigna el colisionador */
+   }
+
+   void SetCollider(){
+     area = Rect<float>(anim->getPosition().x, \
+                        anim->getPosition().y, \
+                        anim->getWidth(), \
+                        anim->getHeight());
+   }
+
+   void SetPosition(float px, float py){
+      this->px = px;
+      this->py = py;
+      SetCollider();
+      anim->setPosition(px, py);
+   }
+
+   Vector2f  getPosition(){
+      return Vector2f(px, py);
+   }
+
+   ENTY           idTipo;     //. tipo de Entidad
+   float          px, py;     //. Posicion
+   float          vx, vy;     //. Velocidad vx,vy;
+   Rect<float>    area;       //. Area de Colision
+   ANIMATION      *anim;      //. Animacion
+   callback       *command;   //. Funcion del Bonus
+
+};
+
+struct BONUS : public ENTIDAD {
+   BONUS() {};
+
+   BONUS(float px, float py, ANIMATION *anim){
+      SetAnimation(anim);
+      SetPosition(px, py);
+   }
+
+   void Update(){
+      SetPosition(px +vx, py+vy);
+   }
+
+   void Display(RenderWindow *win){
+      anim->Display(win);
+   }
+
+};
+/**** TABLA DE ENTIDADES ******************
+Azul     : Hace la nave más larga
+Roja     : Proporciona a la nave un cañon que puede disparar
+Rosado   : Abre una puerta a la que puedes pasar de nivel
+Celeste  : Te propoporciona tres bolas
+Plomo    : Aumenta el numero de vidas
+Verde    : Atrapa la pelota
+Naranja  : Hace que la pelota vaya más lenta
+*/
+
+vector<ENTIDAD *> ENTIDADES;
+vector<ENTIDAD *>::iterator enty;
+
+//. Crea 2 Cañones de Balas.-
+void Command_Canons(void *data){
+   PLAYER *player = (PLAYER*)data;
+   cout << "Bonus Canons: player(" << player->px << "," << player->py << ")" << endl;
+}
+//. Abre las Compuertas para pasar de Nivel
+void Command_Puertas(void *data){
+   cout << " Bonus Compuertas" << endl;
+}
+
+//. Multiplica las Bolas x 3
+void Command_Bolas_x3(void *data){
+   cout << "Bonus 3 Bolas extras" << endl;
+}
+
+void Command_Vida_Extra(void *data){
+   cout << "Bonus Vida Extra" << endl;
+}
+
+void Command_Atrapar_Bola(void *data){
+   cout << "Bonus Atrapar Bola" << endl;
+}
+
+void Command_Bola_Lenta(void *data){
+   cout << "Bonus Bola Lenta" << endl;
+}
+
+void Command_Encoger_Tambor(void *data){
+   cout << "Encoger Tambor Player" << endl;
+}
+
+void Command_Generar_Tornado(void *data){
+   cout << "Generar Tornado" << endl;
+}
+
+void Create_Canons(Image *imagen, float px, float py){
+    ANIMATION *vtmO = new ANIMATION(imagen, IntRect(0, 192, 32, 112), 7, 1);
+    vtmO->setElapsed(0.5f);
+
+    BONUS *bonus = new BONUS(px, py, vtmO);
+
+    bonus->SetVelocity(0, frand(), ENTIDAD::ENTY::Bonus);
+    bonus->SetCommand( &Command_Canons);
+    ENTIDADES.push_back(bonus);
+}
 
 
 int main()
@@ -799,6 +947,7 @@ int main()
     if( !imagen.loadFromFile("./arinoid.bmp")){
       cout << "Error leyendo imagen: arinoid.bmp" << endl;
     }
+    imagen.createMaskFromColor(Color(0,0,0),0);
 
     ANIMATION *explode = new ANIMATION(&imagen, IntRect(0, 160, 224, 32), 1, 7);
     TABLA.insert(make_pair("X", explode));
@@ -809,23 +958,23 @@ int main()
     bomb->setPosition(50, 1);
     TABLA.insert(make_pair("M", bomb));
 
-    ANIMATION *vtmO = new ANIMATION(&imagen, IntRect(0, 192, 32, 224), 7, 1);
+    ANIMATION *vtmO = new ANIMATION(&imagen, IntRect(0, 192, 32, 112), 7, 1);
     vtmO->setElapsed(0.5f);
     vtmO->setPosition(100, 1);
     TABLA.insert(make_pair("O", vtmO));
 
-    ANIMATION *vtmB = new ANIMATION(&imagen, IntRect(32, 192, 32, 224), 7, 1);
+    ANIMATION *vtmB = new ANIMATION(&imagen, IntRect(32, 192, 32, 112), 7, 1);
     vtmB->setElapsed(0.25f);
     vtmB->setModo(ANIMATION::MODO::Back);
     vtmB->setPosition(150, 1);
     TABLA.insert(make_pair("B", vtmB));
 
-    ANIMATION *vtmA = new ANIMATION(&imagen, IntRect(64, 192, 32, 224), 7, 1);
+    ANIMATION *vtmA = new ANIMATION(&imagen, IntRect(64, 192, 32, 112), 7, 1);
     vtmA->setElapsed(0.25f);
     vtmA->setPosition(200, 1);
     TABLA.insert(make_pair("A", vtmA));
 
-    ANIMATION *vtmC = new ANIMATION(&imagen, IntRect(96, 192, 32, 224), 7, 1);
+    ANIMATION *vtmC = new ANIMATION(&imagen, IntRect(96, 192, 32, 112), 7, 1);
     vtmC->setElapsed(0.5f);
     vtmC->setModo(ANIMATION::MODO::Back);
     vtmC->setPosition(250, 1);
@@ -848,6 +997,10 @@ int main()
          if(Keyboard::isKeyPressed(Keyboard::F12)){
             ModoEditar = !ModoEditar;   //. Invertir estado (true | false)
             cout << "ModoEditar: " << ModoEditar << endl;
+         }
+
+         if(Keyboard::isKeyPressed(Keyboard::F1)){
+            Create_Canons(&imagen, 100, 100);
          }
 
 
@@ -1007,6 +1160,7 @@ int main()
       //. Desplegar los bloques
       //. Aprovechar el Mismo cyclo para Dibujar los Botones de los Niveles
       int indice = 0;
+
       for(int index = 0; index < TOTAL; index++){
         if(indice < LEVELS){
           level[indice]->Display(&win);
@@ -1024,6 +1178,33 @@ int main()
         }
         block[index]->Display(&win);
       }
+
+      //. Despliega la tabla de ENTIDADES
+Revisar:
+      for(enty = ENTIDADES.begin(); enty != ENTIDADES.end(); ++enty){
+         //((ENTIDAD*)*enty)->Update();
+         //((ENTIDAD*)*enty)->Display(&win);
+         ENTIDAD *cosa = (ENTIDAD*)*enty;
+         cosa->Update();
+         //. Si el Bono Colisiona al Player
+         if(cosa->isCollision(rcPlayer->getRectangle())){
+            cosa->On_Command(rcPlayer);  /**< Ejecuta el Comando de Este Bono */
+            ENTIDADES.erase(enty);       /**< y luego lo borra de la tabla */
+            goto Revisar;
+         }
+
+
+         //. Si el Bono se Pierde
+         if(cosa->isCollision(rcDown)){
+            cout << "Bono Perdido: " << cosa->get_idTipo() << endl;
+            ENTIDADES.erase(enty);
+            //. No se puede salir del cyclo, si se borra
+            //. Pero no se puede continuar, porque la tabla a cambiado
+            goto Revisar;
+         }
+         cosa->Display(&win);
+      }
+
 
       //. Desplieque de Animaciones
       for( it = TABLA.begin(); it != TABLA.end(); ++it){

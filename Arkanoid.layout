@@ -9,14 +9,21 @@
 	</File>
 	<File name="main.cpp" open="1" top="1" tabpos="1" split="0" active="1" splitpos="0" zoom_1="2" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="25180" topLine="769" />
+			<Cursor1 position="29771" topLine="844" />
 		</Cursor>
 		<Folding>
-			<Collapse line="424" />
+			<Collapse line="93" />
+			<Collapse line="134" />
+			<Collapse line="150" />
+			<Collapse line="235" />
+			<Collapse line="275" />
+			<Collapse line="287" />
 			<Collapse line="460" />
 			<Collapse line="472" />
 			<Collapse line="498" />
 			<Collapse line="538" />
+			<Collapse line="566" />
+			<Collapse line="574" />
 		</Folding>
 	</File>
 </CodeBlocks_layout_file>
