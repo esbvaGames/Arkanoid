@@ -653,8 +653,8 @@ struct ANIMATION{
          region.width = width;
          region.height = height;
          sprites[index] = new Sprite(texture, region);
-         cout << "region:(" << fillZero(3) << region.left <<","<< \
-                               fillZero(3) << region.top <<")" << endl;
+         //cout << "region:(" << fillZero(3) << region.left <<","<< \
+         //                      fillZero(3) << region.top <<")" << endl;
       }
       modo = MODO::Normal;
       setElapsed( 0.15 );
@@ -883,6 +883,220 @@ void Create_Canons(Image *imagen, float px, float py){
     ENTIDADES.push_back(bonus);
 }
 
+/******** LECTURA DE LETRAS BONUS ***************/
+void Load_Bonus(Image *imagen){
+
+   int cc = 40;
+   //. Laser
+   ANIMATION *Laser = new ANIMATION(imagen, IntRect(0,0,256,16), 1,8);
+   Laser->setPosition(cc, 1);
+   TABLA.insert(make_pair("L", Laser));
+
+   cc += 40;
+   //. Enlarge
+   ANIMATION *Enlarge= new ANIMATION(imagen, IntRect(0,16,256,16), 1,8);
+   Enlarge->setPosition(cc, 1);
+   TABLA.insert(make_pair("Enlarge", Enlarge));
+
+    cc += 40;
+    //. Slow
+    ANIMATION *Slow= new ANIMATION(imagen, IntRect(0,32,256,16), 1,8);
+    Slow->setPosition(cc, 1);
+    TABLA.insert(make_pair("Slow", Slow));
+
+    cc += 40;
+    //. Catch
+    ANIMATION *Catch= new ANIMATION(imagen, IntRect(0,48,256,16), 1,8);
+    Catch->setPosition(cc, 1);
+    TABLA.insert(make_pair("Catch", Catch));
+
+    cc += 40;
+    //. Warp
+    ANIMATION *Warp= new ANIMATION(imagen, IntRect(0,64,256,16), 1,8);
+    Warp->setPosition(cc, 1);
+    TABLA.insert(make_pair("Warp", Warp));
+
+    cc += 40;
+    //. Duplex
+    ANIMATION *Duplex= new ANIMATION(imagen, IntRect(0,80,256,16), 1,8);
+    Duplex->setPosition(cc, 1);
+    TABLA.insert(make_pair("Duplex", Duplex));
+
+    cc += 40;
+    //. Temp
+    ANIMATION *Temp= new ANIMATION(imagen, IntRect(0,96,256,16), 1,8);
+    Temp->setPosition(cc, 1);
+    TABLA.insert(make_pair("Temp", Temp));
+
+
+    cc += 40;
+    //. Ball3
+    ANIMATION *Ball3= new ANIMATION(imagen, IntRect(0,112,256,16), 1,8);
+    Ball3->setPosition(cc, 1);
+    TABLA.insert(make_pair("Ball3", Ball3));
+
+    cc += 40;
+    //. PowerUp
+    ANIMATION *PowerUp= new ANIMATION(imagen, IntRect(0,128,256,16), 1,8);
+    PowerUp->setPosition(cc, 1);
+    TABLA.insert(make_pair("PowerUp", PowerUp));
+
+    cc += 40;
+    //. Resizer
+    ANIMATION *Resizer= new ANIMATION(imagen, IntRect(0,144,256,16), 1,8);
+    Resizer->setPosition(cc, 1);
+    TABLA.insert(make_pair("Resizer", Resizer));
+
+    cc += 40;
+    //. Inflate
+    ANIMATION *Inflate= new ANIMATION(imagen, IntRect(0,160,256,32), 1,8);
+    Inflate->setPosition(cc, 1);
+    TABLA.insert(make_pair("Inflate", Inflate));
+
+    cc += 40;
+    //. Magic
+    ANIMATION *Magic= new ANIMATION(imagen, IntRect(0,192,256,16), 1,8);
+    Magic->setPosition(cc, 1);
+    TABLA.insert(make_pair("Magic", Magic));
+
+    cc = 40;
+    //. FireBall
+    ANIMATION *FireBall= new ANIMATION(imagen, IntRect(0,208,192,32), 1,6);
+    FireBall->setPosition(cc, 30);
+    TABLA.insert(make_pair("FireBall", FireBall));
+
+    cc += 40;
+   //. Globe
+   ANIMATION *Globe= new ANIMATION(imagen, IntRect(0,256,256,16), 1,8);
+   Globe->setPosition(cc, 30);
+   TABLA.insert(make_pair("Globe", Globe));
+
+   cc += 40;
+   //. Restore
+   ANIMATION *Restore= new ANIMATION(imagen, IntRect(0,272,256,16), 1,8);
+   Restore->setPosition(cc, 30);
+   TABLA.insert(make_pair("Restore", Restore));
+
+   cc += 40;
+   //. TopDoor
+   ANIMATION *TopDoor= new ANIMATION(imagen, IntRect(0,288,256,16), 1,8);
+   TopDoor->setPosition(cc, 30);
+   TABLA.insert(make_pair("TopDoor", TopDoor));
+
+}
+
+void Load_Enemies(Image *imagen){
+   int cc = 40;
+   //. Cone
+   ANIMATION *Cone= new ANIMATION(imagen, IntRect(0,0,256,32), 1,8);
+   Cone->setPosition(cc, 70);
+   TABLA.insert(make_pair("Cone", Cone));
+
+  cc += 40;
+  //. Triangle
+  ANIMATION *Triangle= new ANIMATION(imagen, IntRect(256,0,352,32), 1,11);
+  Triangle->setPosition(cc, 70);
+  TABLA.insert(make_pair("Triangle", Triangle));
+
+  cc += 40;
+  //. GlobeGreen
+  ANIMATION *GlobeGreen= new ANIMATION(imagen, IntRect(0,32,384,32), 1,12);
+  GlobeGreen->setPosition(cc, 70);
+  TABLA.insert(make_pair("GlobeGreen", GlobeGreen));
+  //cc += 40;
+  //. ExpGreen
+  ANIMATION *ExpGreen= new ANIMATION(imagen, IntRect(384,32,192,32), 1,6);
+  ExpGreen->setPosition(cc, 100);
+  TABLA.insert(make_pair("ExpGreen", ExpGreen));
+
+  cc += 40;
+  //. GlobeRed
+  ANIMATION *GlobeRed= new ANIMATION(imagen, IntRect(0,64,384,32), 1,12);
+  GlobeRed->setPosition(cc, 70);
+  TABLA.insert(make_pair("GlobeRed", GlobeRed));
+  //cc += 40;
+  //. ExpRed
+  ANIMATION *ExpRed= new ANIMATION(imagen, IntRect(384,64,192,32), 1,6);
+  ExpRed->setPosition(cc, 100);
+  TABLA.insert(make_pair("ExpRed", ExpRed));
+
+
+  cc += 40;
+  //. GlobeCyan
+  ANIMATION *GlobeCyan= new ANIMATION(imagen, IntRect(0,96,384,32), 1,12);
+  GlobeCyan->setPosition(cc, 70);
+  TABLA.insert(make_pair("GlobeCyan", GlobeCyan));
+  //cc += 40;
+  //. ExpCyan
+  ANIMATION *ExpCyan= new ANIMATION(imagen, IntRect(384,96,192,32), 1,6);
+  ExpCyan->setPosition(cc, 100);
+  TABLA.insert(make_pair("ExpCyan", ExpCyan));
+
+   cc += 40;
+   //. Cube
+   ANIMATION *Cube= new ANIMATION(imagen, IntRect(608,0,160,64), 2,5);
+   Cube->setPosition(cc, 70);
+   TABLA.insert(make_pair("Cube", Cube));
+
+   cc += 40;
+   //. Sphere
+   ANIMATION *Sphere= new ANIMATION(imagen, IntRect(608,64,160,64), 2,5);
+   Sphere->setPosition(cc, 70);
+   TABLA.insert(make_pair("Sphere", Sphere));
+
+   cc += 40;
+   //. GlobeMix
+   ANIMATION *GlobeMix= new ANIMATION(imagen, IntRect(0,128,768,32), 1,24);
+   GlobeMix->setPosition(cc, 70);
+   TABLA.insert(make_pair("GlobeMix", GlobeMix));
+
+   cc += 40;
+   //. Orbit
+   ANIMATION *Orbit= new ANIMATION(imagen, IntRect(0,160,384,32), 1,12);
+   Orbit->setPosition(cc, 70);
+   TABLA.insert(make_pair("Orbit", Orbit));
+
+   cc += 40;
+   //. Storm
+   ANIMATION *Storm= new ANIMATION(imagen, IntRect(384,160,384,32), 1,12);
+   Storm->setPosition(cc, 70);
+   TABLA.insert(make_pair("Storm", Storm));
+
+   cc += 40;
+   //. Arco
+   ANIMATION *Arco= new ANIMATION(imagen, IntRect(0,192,480,32), 1,15);
+   Arco->setPosition(cc, 70);
+   TABLA.insert(make_pair("Arco", Arco));
+
+   cc += 40;
+   //. Saturn
+   ANIMATION *Saturn= new ANIMATION(imagen, IntRect(512,192,256,32), 1,8);
+   Saturn->setPosition(cc, 70);
+   TABLA.insert(make_pair("Saturn", Saturn));
+
+   cc = 40;
+   //. Magnet
+   ANIMATION *Magnet= new ANIMATION(imagen, IntRect(0,224,768,32), 1,24);
+   Magnet->setPosition(cc,140);
+   TABLA.insert(make_pair("Magnet", Magnet));
+
+   cc += 40;
+   //. Ruby
+   ANIMATION *Ruby= new ANIMATION(imagen, IntRect(0,256,736,32), 1,23);
+   Ruby->setPosition(cc, 140);
+   TABLA.insert(make_pair("Ruby", Ruby));
+
+   cc += 40;
+   //. Atom
+   ANIMATION *Atom= new ANIMATION(imagen, IntRect(0,288,512,64), 2,16);
+   Atom->setPosition(cc, 140);
+   TABLA.insert(make_pair("Atom", Atom));
+
+}
+
+
+
+
 
 int main()
 {
@@ -944,41 +1158,18 @@ int main()
 
     //. Prueba de Animaciones ///
     Image imagen;
-    if( !imagen.loadFromFile("./arinoid.bmp")){
-      cout << "Error leyendo imagen: arinoid.bmp" << endl;
+    if( !imagen.loadFromFile("./PowerUps.png")){
+      cout << "Error leyendo imagen: PowerUps.bmp" << endl;
     }
     imagen.createMaskFromColor(Color(0,0,0),0);
+    Load_Bonus(&imagen);
 
-    ANIMATION *explode = new ANIMATION(&imagen, IntRect(0, 160, 224, 32), 1, 7);
-    TABLA.insert(make_pair("X", explode));
+    Image enemies;
+    if( !enemies.loadFromFile("./Enemies.png")){
+      cout << "Error leyendo Enemies: Enemies.png" << endl;
+    }
+    Load_Enemies(&enemies);
 
-    ANIMATION *bomb = new ANIMATION(&imagen, IntRect(0,128, 256, 32), 1, 8);
-    bomb->setModo(ANIMATION::MODO::Back);
-    bomb->setElapsed(0.25f);
-    bomb->setPosition(50, 1);
-    TABLA.insert(make_pair("M", bomb));
-
-    ANIMATION *vtmO = new ANIMATION(&imagen, IntRect(0, 192, 32, 112), 7, 1);
-    vtmO->setElapsed(0.5f);
-    vtmO->setPosition(100, 1);
-    TABLA.insert(make_pair("O", vtmO));
-
-    ANIMATION *vtmB = new ANIMATION(&imagen, IntRect(32, 192, 32, 112), 7, 1);
-    vtmB->setElapsed(0.25f);
-    vtmB->setModo(ANIMATION::MODO::Back);
-    vtmB->setPosition(150, 1);
-    TABLA.insert(make_pair("B", vtmB));
-
-    ANIMATION *vtmA = new ANIMATION(&imagen, IntRect(64, 192, 32, 112), 7, 1);
-    vtmA->setElapsed(0.25f);
-    vtmA->setPosition(200, 1);
-    TABLA.insert(make_pair("A", vtmA));
-
-    ANIMATION *vtmC = new ANIMATION(&imagen, IntRect(96, 192, 32, 112), 7, 1);
-    vtmC->setElapsed(0.5f);
-    vtmC->setModo(ANIMATION::MODO::Back);
-    vtmC->setPosition(250, 1);
-    TABLA.insert(make_pair("C", vtmC));
 
 
     while(win.isOpen()){
