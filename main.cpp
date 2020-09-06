@@ -636,6 +636,11 @@ protected:
 struct ANIMATION{
    ANIMATION() {};
 
+   //. Constructor de Copia
+   ANIMATION(const ANIMATION *Other){
+      *this = Other;
+   }
+
    ANIMATION(Image *image, IntRect area, int filas, int colms){
       texture.loadFromImage(*image, area);
       this->filas = filas;
@@ -882,6 +887,101 @@ void Create_Canons(Image *imagen, float px, float py){
     bonus->SetCommand( &Command_Canons);
     ENTIDADES.push_back(bonus);
 }
+/******** ENUMERACION DE LOS BONOS **************/
+enum Bonus { Laser, Enlarge, Slow, Catch, Warp, Duplex, Temp, Ball3, \
+             PowerUp, Resizer, Inflate, Magic, Globe, Restore, TopDoor};
+
+
+map<Bonus, string> Names = {
+   { Bonus::Laser,   "Laser" },
+   { Bonus::Enlarge, "Enlarge" },
+   { Bonus::Slow,    "Slow" },
+   { Bonus::Catch,   "Catch" },
+   { Bonus::Warp,    "Warp" },
+   { Bonus::Duplex,  "Duplex" },
+   { Bonus::Temp,    "Temp" },
+   { Bonus::Ball3,   "Ball3" },
+   { Bonus::PowerUp, "PowerUp" },
+   { Bonus::Resizer, "Resizer" },
+   { Bonus::Inflate, "Inflate" },
+   { Bonus::Magic,   "Magic" },
+   { Bonus::Globe,   "Globe" },
+   { Bonus::Restore, "Restore" },
+   { Bonus::TopDoor, "TopDoor" },
+};
+
+
+void MakeBonus(float px, float py, Bonus tipo){
+
+   string keyName = Names.at(tipo);
+   cout << "Bonus: " << keyName << endl;
+
+   ANIMATION *anim = NULL;
+   //. No debiera fallar, Si encuentra todas las palabras Clave
+   try {
+      anim = new ANIMATION( *TABLA.at(keyName) );
+   } catch(exception &e){
+      //. Podria haber un nombre incorrecto.-
+      cout << "Error en: " << e.what() <<" => " << keyName << endl;
+      return;   //. se sale.-
+   }
+   BONUS *bonus = new BONUS(px, py, anim);
+   bonus->SetVelocity(0, frand(), ENTIDAD::ENTY::Bonus);
+   bonus->SetCommand( &Command_Canons );
+   ENTIDADES.push_back(bonus);
+}
+
+enum Enemy { Cone, Triangle, GlobeGreen, ExpGreen, GlobeRed, ExpRed, GlobeCyan, \
+             ExpCyan, Cube, Sphere, GlobeMix, Orbit, Storm, Arco, Saturn, Magnet, \
+             Ruby, Atom};
+
+map<Enemy, string> Enemies = {
+   { Enemy::Cone,       "Cone" },
+   { Enemy::Triangle,   "Triangle" },
+   { Enemy::GlobeGreen, "GlobeGreen" },
+   { Enemy::ExpGreen,   "ExpGreen" },
+   { Enemy::GlobeRed,   "GlobeRed" },
+   { Enemy::ExpRed,     "ExpRed" },
+   { Enemy::GlobeCyan,  "GlobeCyan" },
+   { Enemy::ExpCyan,    "ExpCyan" },
+   { Enemy::Cube,       "Cube" },
+   { Enemy::Sphere,     "Sphere" },
+   { Enemy::GlobeMix,   "GlobeMix" },
+   { Enemy::Orbit,      "Orbit" },
+   { Enemy::Storm,      "Storm" },
+   { Enemy::Arco,       "Arco" },
+   { Enemy::Saturn,     "Saturn" },
+   { Enemy::Magnet,     "Magnet" },
+   { Enemy::Ruby,       "Ruby" },
+   { Enemy::Atom,       "Atom" },
+};
+
+void MakeEnemy(float px, float py, Enemy tipo){
+   //. Ya es comprobado que estan todas las claves.-
+   string keyName = Enemies.at(tipo);
+   cout << "Enemies: " << keyName << " : " << tipo << endl;
+
+   //. No debiera fallar, si encuentra todas las palabras clave.-
+   ANIMATION * anim = NULL;
+   try {
+      anim = new ANIMATION( *TABLA.at(keyName) );
+
+   } catch(exception &e){
+      //. Podria haber un nombre incorrecto.-
+      cout << "Error: " << e.what() << " => " << keyName << endl;
+      return;   //. Se Sale
+   }
+
+   BONUS *bonus = new BONUS(px, py, anim);
+   bonus->SetVelocity(0, frand(), ENTIDAD::ENTY::Enemy);
+   bonus->SetCommand( &Command_Canons );
+   ENTIDADES.push_back(bonus);
+
+}
+
+
+
+
 
 /******** LECTURA DE LETRAS BONUS ***************/
 void Load_Bonus(Image *imagen){
@@ -890,7 +990,7 @@ void Load_Bonus(Image *imagen){
    //. Laser
    ANIMATION *Laser = new ANIMATION(imagen, IntRect(0,0,256,16), 1,8);
    Laser->setPosition(cc, 1);
-   TABLA.insert(make_pair("L", Laser));
+   TABLA.insert(make_pair("Laser", Laser));
 
    cc += 40;
    //. Enlarge
@@ -1190,8 +1290,18 @@ int main()
             cout << "ModoEditar: " << ModoEditar << endl;
          }
 
+         //. Prueba para los Bonos
          if(Keyboard::isKeyPressed(Keyboard::F1)){
-            Create_Canons(&imagen, 100, 100);
+            int iTipo = rand() % ((int)Bonus::TopDoor);
+            int px = (rand() % 200) + 100;
+            MakeBonus(px, 100,(Bonus) iTipo);
+         }
+
+         //. Prueba para los enemigos
+         if(Keyboard::isKeyPressed(Keyboard::F2)){
+            int iTipo = rand() % ((int)Enemy::Atom);
+            int px = (rand() % 200) + 100;
+            MakeEnemy(px, 100, (Enemy) iTipo);
          }
 
 
