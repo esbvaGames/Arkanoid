@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <BrowseTracker_layout_file>
 	<ActiveTarget name="Debug" />
-	<File name="main.cpp" open="1" top="1" tabpos="1">
-		<Cursor position="27680" topLine="817" />
-		<BrowseMarks positions="18740,19303,30001,30625,30657,30770,31144,46164" />
-		<Book_Marks positions="27762,21396,21394,22504,34193,22206,23493,29022,35569,26134,26430,29771,11361,25189,35735,37242,36971" />
-	</File>
 	<File name="GameLevel.txt" open="0" top="0" tabpos="2">
 		<Cursor position="0" topLine="0" />
+	</File>
+	<File name="main.cpp" open="1" top="1" tabpos="1">
+		<Cursor position="48010" topLine="1369" />
+		<BrowseMarks positions="18808,19371,31746,32370,32402,32515,32889,48768" />
+		<Book_Marks positions="27762,21396,21394,22504,34193,22206,23493,29022,35569,26134,26430,29771,11361,25189,35735,37242,36971" />
 	</File>
 </BrowseTracker_layout_file>

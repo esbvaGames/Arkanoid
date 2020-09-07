@@ -334,6 +334,10 @@ struct BOLA {
       return rcBola;
    }
 
+   Vector2f getPosition(){
+      return Vector2f(px, py);
+   }
+
 //. Proteccion de datos, solo da acceso a clases heredadas,
 //. esta aca, solo porque el editor me muestra un color distinto de las funciones
 //. jajajaa.
@@ -827,8 +831,59 @@ struct BONUS : public ENTIDAD {
    void Display(RenderWindow *win){
       anim->Display(win);
    }
+};
+
+struct ENEMY : public ENTIDAD {
+   ENEMY() {}
+
+   ENEMY(float px, float py, ANIMATION *anim){
+      SetAnimation(anim);
+      SetPosition(px, py);
+   }
+   void Display(RenderWindow *win){
+      anim->Display(win);
+   }
+   //. Carga las Referencias de los Colisionadores Principales
+   //. Podria ser una funcion friend, pero aqui se evita escritura en
+   //. El parrafo central de proceso.-
+   void SetColliders(RectangleShape rcTop, RectangleShape rcDown, \
+                     RectangleShape rcLeft, RectangleShape rcRight){
+      this->rcTop  = rcTop;
+      this->rcDown = rcDown;
+      this->rcLeft = rcLeft;
+      this->rcRight = rcRight;
+   }
+
+   //. Comportamiento Diferente
+   void Update(){
+      if( !Activo ){
+         Activo = true;
+         vx = frand() - frand();
+         vy = frand() - frand();
+      }
+      SetPosition(px + vx, py + vy);
+
+      if(isCollision(rcTop))  { vy =  frand(); }
+      if(isCollision(rcDown)) { vy = -frand(); }
+      if(isCollision(rcLeft)) { vx =  frand(); }
+      if(isCollision(rcRight)){ vx = -frand(); }
+
+      //. Otros comportamientos segun el Tipo de Enemigo
+
+
+   }
+protected:
+   bool Activo = false;
+   //. Los enemigos Guardan una Referencia de los Bordes Colisionadores
+   RectangleShape   rcTop;
+   RectangleShape   rcDown;
+   RectangleShape   rcLeft;
+   RectangleShape   rcRight;
+
 
 };
+
+
 /**** TABLA DE ENTIDADES ******************
 Azul     : Hace la nave más larga
 Roja     : Proporciona a la nave un cañon que puede disparar
@@ -930,6 +985,11 @@ void MakeBonus(float px, float py, Bonus tipo){
    bonus->SetCommand( &Command_Canons );
    ENTIDADES.push_back(bonus);
 }
+//. Overload
+void MakeBonus(Vector2f pos, Bonus tipo){
+   MakeBonus(pos.x, pos.y, tipo);
+}
+
 
 enum Enemy { Cone, Triangle, GlobeGreen, ExpGreen, GlobeRed, ExpRed, GlobeCyan, \
              ExpCyan, Cube, Sphere, GlobeMix, Orbit, Storm, Arco, Saturn, Magnet, \
@@ -956,7 +1016,7 @@ map<Enemy, string> Enemies = {
    { Enemy::Atom,       "Atom" },
 };
 
-void MakeEnemy(float px, float py, Enemy tipo){
+ENEMY *MakeEnemy(float px, float py, Enemy tipo){
    //. Ya es comprobado que estan todas las claves.-
    string keyName = Enemies.at(tipo);
    cout << "Enemies: " << keyName << " : " << tipo << endl;
@@ -969,16 +1029,22 @@ void MakeEnemy(float px, float py, Enemy tipo){
    } catch(exception &e){
       //. Podria haber un nombre incorrecto.-
       cout << "Error: " << e.what() << " => " << keyName << endl;
-      return;   //. Se Sale
+      return NULL;   //. Se Sale
    }
 
-   BONUS *bonus = new BONUS(px, py, anim);
-   bonus->SetVelocity(0, frand(), ENTIDAD::ENTY::Enemy);
-   bonus->SetCommand( &Command_Canons );
-   ENTIDADES.push_back(bonus);
+   ENEMY *enemy = new ENEMY(px, py, anim);
+   enemy->SetVelocity(0,0, ENTIDAD::ENTY::Enemy);
+   enemy->SetCommand( &Command_Canons );
+   ENTIDADES.push_back(enemy);
 
+   //. para cargar los Rectangulos de Colision Principales
+   return enemy;
 }
 
+//.   Overload
+ENEMY *MakeEnemy(Vector2f pos, Enemy tipo){
+   return MakeEnemy(pos.x, pos.y, tipo);
+}
 
 
 
@@ -1475,6 +1541,23 @@ int main()
            if(force == CForce::forceTop)   { rcBola->reboteTop(); }
            if(force == CForce::forceDown)  { rcBola->reboteDown(); }
            block[index]->setActivo(false);
+
+           //. La probabilidad es de 1 a 10, para Bonos
+           if( !(rand() % 10) ){
+               int iTipo = rand() % (int)Bonus::TopDoor;
+               MakeBonus(rcBola->getPosition(),(Bonus)iTipo);
+           }
+
+           //. Probabilidad de 5 para Enemigo a trabajar
+           if( !(rand() % 5) ){
+              int iTipo = rand() & (int)Enemy::Atom;
+              //. Podria aparecer no necesariamente en la posicion de la Bola
+              //. porque puede entrar desde las compuertas de arriba.-
+              ENEMY *enemy = NULL;
+              enemy = MakeEnemy(rcBola->getPosition(), (Enemy)iTipo);
+              enemy->SetColliders(rcTop, rcDown, rcLeft, rcRight);
+           }
+
            continue;
         }
         block[index]->Display(&win);
@@ -1493,7 +1576,12 @@ Revisar:
             ENTIDADES.erase(enty);       /**< y luego lo borra de la tabla */
             goto Revisar;
          }
+         cosa->Display(&win);
 
+         //. Enemigo No debe morir en el rcDown
+         if(cosa->get_idTipo() == ENTIDAD::ENTY::Enemy){
+            continue;
+         }
 
          //. Si el Bono se Pierde
          if(cosa->isCollision(rcDown)){
@@ -1503,7 +1591,6 @@ Revisar:
             //. Pero no se puede continuar, porque la tabla a cambiado
             goto Revisar;
          }
-         cosa->Display(&win);
       }
 
 
