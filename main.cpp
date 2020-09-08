@@ -63,7 +63,7 @@ int data_getGolpes(int idColor){
 
 int   Puntaje   = 0;
 bool  StartGame = false;
-bool  ModoEditar = true;
+bool  ModoEditar = false;
 bool  Mouse_in_block = false;
 
 Color colorBorde = Color( 74, 134, 232);
@@ -336,6 +336,11 @@ struct BOLA {
 
    Vector2f getPosition(){
       return Vector2f(px, py);
+   }
+
+   void Golpeada(){
+      vx = frand() - frand();
+      vy = frand() - frand();
    }
 
 //. Proteccion de datos, solo da acceso a clases heredadas,
@@ -676,14 +681,18 @@ struct ANIMATION{
    }
 
 
-   void Display(RenderWindow *win){
+   bool Display(RenderWindow *win){
+      bool finished = false;     //. Marca si la animacion a finalizado
       if(modo == MODO::Back){
-        UpdateBack();
+        finished = UpdateBack();
       } else {
-        UpdatePlay();
+        finished = UpdatePlay();
       }
       sprites[index]->setPosition(px, py);
+      //. Para tratar la posicion desde el Centro de la Animacion;
+      sprites[index]->setOrigin(width / 2.0f, height / 2.0f);
       win->draw(*sprites[index]);
+      return finished;
    }
 
    void setPosition(float px, float py){
@@ -754,12 +763,12 @@ struct ENTIDAD {
    virtual void Update() = 0;
    virtual void Display(RenderWindow *win) = 0;
 
-   enum ENTY {Bonus, Enemy, Power};
+   enum GRUPO {Bonus, Enemy, Efecto};
 
-   void SetVelocity(float vx, float vy, ENTY idTipo){
+   void SetVelocity(float vx, float vy, GRUPO idGrupo){
       this->vx = vx;
       this->vy = vy;
-      this->idTipo = idTipo;
+      this->idGrupo = idGrupo;
    }
 
    bool isCollision(RectangleShape spOther){
@@ -781,7 +790,12 @@ struct ENTIDAD {
       command(data);
    }
 
-   ENTY get_idTipo() { return idTipo; }
+   GRUPO get_idGrupo() { return idGrupo; }
+
+   Vector2f  getPosition() {
+      return Vector2f(px, py);
+   }
+
 
 protected:
    void SetAnimation(ANIMATION *anim){
@@ -790,8 +804,8 @@ protected:
    }
 
    void SetCollider(){
-     area = Rect<float>(anim->getPosition().x, \
-                        anim->getPosition().y, \
+     area = Rect<float>(anim->getPosition().x - (anim->getWidth() / 2.0f), \
+                        anim->getPosition().y - (anim->getHeight() / 2.0f), \
                         anim->getWidth(), \
                         anim->getHeight());
    }
@@ -803,11 +817,7 @@ protected:
       anim->setPosition(px, py);
    }
 
-   Vector2f  getPosition(){
-      return Vector2f(px, py);
-   }
-
-   ENTY           idTipo;     //. tipo de Entidad
+   GRUPO           idGrupo;     //. tipo de Entidad
    float          px, py;     //. Posicion
    float          vx, vy;     //. Velocidad vx,vy;
    Rect<float>    area;       //. Area de Colision
@@ -839,6 +849,7 @@ struct ENEMY : public ENTIDAD {
    ENEMY(float px, float py, ANIMATION *anim){
       SetAnimation(anim);
       SetPosition(px, py);
+      golpes = (rand()+8) % 16;    //. Minimo 8 golpes max 16.-
    }
    void Display(RenderWindow *win){
       anim->Display(win);
@@ -869,19 +880,69 @@ struct ENEMY : public ENTIDAD {
       if(isCollision(rcRight)){ vx = -frand(); }
 
       //. Otros comportamientos segun el Tipo de Enemigo
-
-
    }
+
+   //. Si el Enemigo es golpeado por la Bola
+   bool isGolpeado(RectangleShape rcBola){
+      retardo -= 1;            //. Cuando se crea, siempre esta colisionando
+      if(retardo <= 0.0){      //. Este retardador le da tiempo a moverse.-
+         if(isCollision(rcBola)){
+            golpes -= 1;
+            cout << "Enemy Golpeado: " << golpes << endl;
+            if(golpes <= 0.0) {  finished = true; }
+            return true;
+         }
+      }
+      return false;
+   }
+
+
+   //. Si el enemigo es Golpeado, cambia de direccion
+   void Golpeado() {
+      vx = frand() - frand();
+      vy = frand() - frand();
+   }
+
+   bool isFinished()  { return finished; }
+
+
 protected:
+   int golpes    =  0;               //. Golpes de resistencia del Enemigo
+   int retardo   = 30;               //. Retardo del detector de colisiones
+   bool finished = false;            //. Enemigo ha sido Destruido
+
    bool Activo = false;
    //. Los enemigos Guardan una Referencia de los Bordes Colisionadores
    RectangleShape   rcTop;
    RectangleShape   rcDown;
    RectangleShape   rcLeft;
    RectangleShape   rcRight;
+};
 
+struct EFECTO : public ENTIDAD {
+   EFECTO() {}
+
+   EFECTO(float px, float py, ANIMATION *anim){
+      SetAnimation(anim);
+      SetPosition(px, py);
+   }
+
+   void Update(){
+      anim->setPosition(px +vx, py +vy);
+   }
+
+   void Display(RenderWindow *win){
+      finished = anim->Display(win);   //. Retornado desde la Animacion
+   }
+
+   bool isFinished() { return finished; }
+
+protected:
+   //. Marca si la animación del efecto ha finalizado.-
+   bool finished = false;
 
 };
+
 
 
 /**** TABLA DE ENTIDADES ******************
@@ -938,7 +999,7 @@ void Create_Canons(Image *imagen, float px, float py){
 
     BONUS *bonus = new BONUS(px, py, vtmO);
 
-    bonus->SetVelocity(0, frand(), ENTIDAD::ENTY::Bonus);
+    bonus->SetVelocity(0, frand(), ENTIDAD::GRUPO::Bonus);
     bonus->SetCommand( &Command_Canons);
     ENTIDADES.push_back(bonus);
 }
@@ -981,7 +1042,7 @@ void MakeBonus(float px, float py, Bonus tipo){
       return;   //. se sale.-
    }
    BONUS *bonus = new BONUS(px, py, anim);
-   bonus->SetVelocity(0, frand(), ENTIDAD::ENTY::Bonus);
+   bonus->SetVelocity(0, frand(), ENTIDAD::GRUPO::Bonus);
    bonus->SetCommand( &Command_Canons );
    ENTIDADES.push_back(bonus);
 }
@@ -1033,7 +1094,7 @@ ENEMY *MakeEnemy(float px, float py, Enemy tipo){
    }
 
    ENEMY *enemy = new ENEMY(px, py, anim);
-   enemy->SetVelocity(0,0, ENTIDAD::ENTY::Enemy);
+   enemy->SetVelocity(0,0, ENTIDAD::GRUPO::Enemy);
    enemy->SetCommand( &Command_Canons );
    ENTIDADES.push_back(enemy);
 
@@ -1046,7 +1107,31 @@ ENEMY *MakeEnemy(Vector2f pos, Enemy tipo){
    return MakeEnemy(pos.x, pos.y, tipo);
 }
 
+enum Efecto { Colision, Explosion };
+map<Efecto, string> NameEfecto = {
+   { Efecto::Colision, "Colision"   },
+   { Efecto::Explosion, "Explosion" },
+};
 
+
+EFECTO *MakeEfecto(float px, float py, Efecto tipo){
+   string keyName = NameEfecto.at(tipo);
+
+   EFECTO *efecto = new EFECTO(px, py, new ANIMATION( *TABLA.at(keyName)));
+   if(tipo == Efecto::Colision){
+      float vx = ((rand()%80)+10) -40;
+      float vy = ((rand()%80)+10) -40;
+      efecto->SetVelocity(vx, vy, ENTIDAD::GRUPO::Efecto);
+   } else {
+      efecto->SetVelocity(0,0, ENTIDAD::GRUPO::Efecto);
+   }
+   ENTIDADES.push_back(efecto);
+   return efecto;
+}
+
+EFECTO *MakeEfecto(Vector2f pos, Efecto tipo){
+   return MakeEfecto(pos.x, pos.y, tipo);
+}
 
 
 /******** LECTURA DE LETRAS BONUS ***************/
@@ -1260,7 +1345,17 @@ void Load_Enemies(Image *imagen){
 
 }
 
+void Load_Efectos(Image *efecto){
 
+   ANIMATION *explode = new ANIMATION(efecto, IntRect(0,0, 505, 64), 1,8);
+   explode->setPosition(450, 100);
+   TABLA.insert(make_pair("Explosion", explode));
+
+   ANIMATION *colision = new ANIMATION(efecto, IntRect(0,64, 280, 40), 1,7);
+   colision->setPosition(400, 110);
+   TABLA.insert(make_pair("Colision", colision));
+
+}
 
 
 
@@ -1322,7 +1417,7 @@ int main()
     BUTTON *Cargar  = new BUTTON(400, 386, 70, 25, "Cargar", &font, 14);
     BUTTON *Salir   = new BUTTON(230, 425, 70, 25, "Salir", &font, 14);
 
-    //. Prueba de Animaciones ///
+    //. Prueba de Animaciones Bonus ///
     Image imagen;
     if( !imagen.loadFromFile("./PowerUps.png")){
       cout << "Error leyendo imagen: PowerUps.bmp" << endl;
@@ -1330,11 +1425,19 @@ int main()
     imagen.createMaskFromColor(Color(0,0,0),0);
     Load_Bonus(&imagen);
 
+    //. Animaciones de Enemigos;
     Image enemies;
     if( !enemies.loadFromFile("./Enemies.png")){
       cout << "Error leyendo Enemies: Enemies.png" << endl;
     }
     Load_Enemies(&enemies);
+
+    //. Explosiones y otros efectos
+    Image effect;
+    if( !effect.loadFromFile("./Efectos.png")) {
+      cout << "Error leyendo Efectos: Efectos.png" << endl;
+    }
+    Load_Efectos(&effect);
 
 
 
@@ -1367,7 +1470,9 @@ int main()
          if(Keyboard::isKeyPressed(Keyboard::F2)){
             int iTipo = rand() % ((int)Enemy::Atom);
             int px = (rand() % 200) + 100;
-            MakeEnemy(px, 100, (Enemy) iTipo);
+            ENEMY *enemy = MakeEnemy(px, 100, (Enemy) iTipo);
+            enemy->SetColliders(rcTop, rcDown, rcLeft, rcRight);
+
          }
 
 
@@ -1570,34 +1675,71 @@ Revisar:
          //((ENTIDAD*)*enty)->Display(&win);
          ENTIDAD *cosa = (ENTIDAD*)*enty;
          cosa->Update();
+         cosa->Display(&win);
+
          //. Si el Bono Colisiona al Player
          if(cosa->isCollision(rcPlayer->getRectangle())){
             cosa->On_Command(rcPlayer);  /**< Ejecuta el Comando de Este Bono */
-            ENTIDADES.erase(enty);       /**< y luego lo borra de la tabla */
-            goto Revisar;
+
+            //. Si el player es Golpeado por alguna cosa
+            EFECTO *efx = MakeEfecto(cosa->getPosition(), Efecto::Explosion);
+            efx->Display(&win);
+
+            enty = ENTIDADES.erase(enty);       /**< y luego lo borra de la tabla */
+            goto Revision;
          }
-         cosa->Display(&win);
+
+         //. Para los efectos se borran cuando Finalizan
+         if(cosa->get_idGrupo() == ENTIDAD::GRUPO::Efecto){
+            if( ((EFECTO*)cosa)->isFinished() ){
+               //cout << "Terminar el Efecto" << endl;
+               enty = ENTIDADES.erase(enty);
+               goto Revision;
+            }
+         }
+
+
 
          //. Enemigo No debe morir en el rcDown
-         if(cosa->get_idTipo() == ENTIDAD::ENTY::Enemy){
+         if(cosa->get_idGrupo() == ENTIDAD::GRUPO::Enemy){
+            ENEMY *enemy = (ENEMY*)cosa;
+            if(enemy->isFinished()){
+               EFECTO *efx = MakeEfecto(enemy->getPosition(), Efecto::Explosion);
+               efx->Display(&win);
+
+               enty = ENTIDADES.erase(enty);
+               break;
+            } else {
+
+               if(enemy->isGolpeado(rcBola->getRectangle() )){
+                  rcBola->Golpeada();
+                  enemy->Golpeado();
+                  //cout << "Crear el Efecto" << endl;
+                  EFECTO *efx = MakeEfecto(enemy->getPosition(), Efecto::Colision);
+                  efx->Display(&win);
+
+                  break;
+               }
+            }
             continue;
          }
 
          //. Si el Bono se Pierde
          if(cosa->isCollision(rcDown)){
-            cout << "Bono Perdido: " << cosa->get_idTipo() << endl;
-            ENTIDADES.erase(enty);
-            //. No se puede salir del cyclo, si se borra
-            //. Pero no se puede continuar, porque la tabla a cambiado
-            goto Revisar;
+            cout << "Bono Perdido: " << cosa->get_idGrupo() << endl;
+            enty = ENTIDADES.erase(enty);
          }
+Revision:
+         //. Si borra algo y el puntero queda en el ultimo se sale.
+         if(enty == ENTIDADES.end() ) { break; }
+
       }
 
 
       //. Desplieque de Animaciones
-      for( it = TABLA.begin(); it != TABLA.end(); ++it){
-         ((ANIMATION*)it->second)->Display(&win);
-      }
+      //for( it = TABLA.begin(); it != TABLA.end(); ++it){
+      //   ((ANIMATION*)it->second)->Display(&win);
+      //}
 
 
 
