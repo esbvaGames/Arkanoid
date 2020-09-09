@@ -1,5 +1,29 @@
 # depslib dependency file v1.0
-1599582759 source:c:\documents\codeblocks\arkanoid\main.cpp
+1599687200 source:c:\documents\codeblocks\arkanoid\main.cpp
+	"globals.h"
+	"Blocks.h"
+	"Circle.h"
+	"Player.h"
+	"Button.h"
+	"LEVELS.h"
+	"Animation.h"
+	"Entidad.h"
+
+1599672137 c:\documents\codeblocks\arkanoid\levels.h
+
+1598814562 source:c:\documents\codeblocks\arkanoid\bonos.cpp
+	<stdio.h>
+	<stdlib.h>
+	<conio.h>
+	<iostream>
+	<sstream>
+
+1599669781 source:c:\documents\codeblocks\arkanoid\levels.cpp
+	"globals.h"
+	"blocks.h"
+	"levels.h"
+
+1599673012 c:\documents\codeblocks\arkanoid\globals.h
 	<SFML/Graphics.hpp>
 	<SFML/Window.hpp>
 	<SFML/System.hpp>
@@ -9,15 +33,15 @@
 	<fstream>
 	<map>
 
-1598399889 c:\documents\codeblocks\arkanoid\levels.h
-	<SFML/Graphics.hpp>
-	<SFML/Window.hpp>
-	<SFML/System.hpp>
+1599669949 c:\documents\codeblocks\arkanoid\blocks.h
 
-1598814562 source:c:\documents\codeblocks\arkanoid\bonos.cpp
-	<stdio.h>
-	<stdlib.h>
-	<conio.h>
-	<iostream>
-	<sstream>
+1599670535 c:\documents\codeblocks\arkanoid\circle.h
+
+1599670867 c:\documents\codeblocks\arkanoid\player.h
+
+1599671077 c:\documents\codeblocks\arkanoid\button.h
+
+1599671283 c:\documents\codeblocks\arkanoid\animation.h
+
+1599671399 c:\documents\codeblocks\arkanoid\entidad.h
 

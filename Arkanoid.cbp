@@ -39,8 +39,17 @@
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
 		</Compiler>
+		<Unit filename="Animation.h" />
+		<Unit filename="Blocks.h" />
+		<Unit filename="Button.h" />
+		<Unit filename="Circle.h" />
+		<Unit filename="Entidad.h" />
 		<Unit filename="GameLevel.txt" />
+		<Unit filename="Player.h" />
 		<Unit filename="arinoid.bmp" />
+		<Unit filename="globals.h" />
+		<Unit filename="levels.cpp" />
+		<Unit filename="levels.h" />
 		<Unit filename="main.cpp" />
 		<Extensions>
 			<lib_finder disable_auto="1" />

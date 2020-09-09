@@ -1,87 +1,29 @@
 
-#include <SFML/Graphics.hpp>
-#include <SFML/Window.hpp>
-#include <SFML/System.hpp>
+#define _MAIN_
 
-#include <iostream>
-#include <iomanip>
-#include <sstream>
-#include <fstream>
-#include <map>
+#include "globals.h"
+#include "Blocks.h"
+#include "Circle.h"
+#include "Player.h"
+#include "Button.h"
+#include "LEVELS.h"
+#include "Animation.h"
+#include "Entidad.h"
 
-enum CForce { forceLeft=1, forceRight, forceTop, forceDown };
+map<string, ANIMATION *> TABLA;
+map<string, ANIMATION *>::iterator it;
 
-//. Para usar la libreria Standard
-using namespace std;
-//. Para usar la librería SFML Espacio de Nombres.-
-using namespace sf;
-
-
-//#include "LEVELS.h"
-
-#define MAX_LEVEL 50
-#define MAX_FILAS 12    //. Niveles mas altos tienen mas filas
-#define MAX_COLMS 13
-int ARRAY_LEVEL[MAX_LEVEL][MAX_FILAS][MAX_COLMS] = {};
-
-struct DATA {
-   int   indice;
-   Color colors;
-   int   Golpes;
-   DATA() {};
-   DATA(int indice, Color colors, int Golpes){
-      this->indice = indice;
-      this->colors = colors;
-      this->Golpes = Golpes;
-   }
-};
-
-#define NUM_COLORS 10
-
-DATA data[NUM_COLORS] = {
-   { DATA(0, (Color)NULL,        0) },  //. 0 Vacio
-   { DATA(1, Color(  1,155,  0), 0) },  //. 1 Verde
-   { DATA(2, Color(  0,255,  0), 1) },  //. 2 Verde LT 1 Golpe
-   { DATA(3, Color(255,255,  0), 2) },  //. 3 Amarillo 2 Golpes
-   { DATA(4, Color(255,111,  0), 3) },  //. 4 Naranja  3 Golpes
-   { DATA(5, Color(255,  0,  0), 4) },  //. 5 Rojo     4 Golpes
-   { DATA(6, Color(255,  0,255), 5) },  //. 6 Rosa     5 Golpes
-   { DATA(7, Color(154,  0,255), 6) },  //. 7 fuccia   6 Golpes
-   { DATA(8, Color(  3,145,130), 7) },  //. 8 purple   7 Golpes
-   { DATA(9, Color( 74,134,232), 8) },  //. 9 cyanDK   8 Golpes
-   // ... Definir mas Colores aca ...
-};
-
-Color data_getColors(int idColor){
-   return data[idColor].colors;
-}
-
-int data_getGolpes(int idColor){
-   return data[idColor].Golpes;
-}
-
-
-int   Puntaje   = 0;
-bool  StartGame = false;
-bool  ModoEditar = false;
-bool  Mouse_in_block = false;
-
-Color colorBorde = Color( 74, 134, 232);
-Color colorBlock = Color(255,  90,  90);
-Color colorYellow = Color(255, 255, 0);
-Color colorPlayer = Color(90, 255, 90);
-Color colorDoors  = Color( 0, 255, 255);
-
-Color colorRojo  = Color(255, 0, 0);
-Color colorRojo_alpha = Color(255,0,0, 40);
-Color colorVerde = Color(0, 255, 0);
-
-Color colorBorde_alpha = Color(74, 134, 232, 40);
-Color colorSelect = Color(0,255,0);
-Color colorSelect_alpha = Color(0,255,0, 40);
-Color colorPressed = Color(0,255,255);
-Color colorPressed_alpha = Color(0,255,255,40);
-
+/**** TABLA DE ENTIDADES ******************
+Azul     : Hace la nave más larga
+Roja     : Proporciona a la nave un cañon que puede disparar
+Rosado   : Abre una puerta a la que puedes pasar de nivel
+Celeste  : Te propoporciona tres bolas
+Plomo    : Aumenta el numero de vidas
+Verde    : Atrapa la pelota
+Naranja  : Hace que la pelota vaya más lenta
+*/
+vector<ENTIDAD *> ENTIDADES;
+//vector<ENTIDAD *>::iterator enty;  //. Usar Iterador automativo auto_ptr
 
 #define maxRange 100000 // es 10.1234
 #define minRange  20000 // es  2.1234
@@ -91,45 +33,63 @@ float frand(){
     return (float) (((rand()+rdMargen) % maxRange) + minRange) / 10000;
 }
 
-struct BLOCK {
-    //. Constructor que no hace nada, es una formalidad
-    BLOCK() {};
+/******** ENUMERACION DE LOS BONOS **************/
+enum Bonus { Laser, Enlarge, Slow, Catch, Warp, Duplex, Temp, Ball3, \
+             PowerUp, Resizer, Inflate, Magic, Globe, Restore, TopDoor};
 
-    //. Si no se especifica el color de relleno, el relleno sera NULL.-
-    BLOCK(float px, float py, Color myRelleno = (Color)NULL ){
-        rcBlock.setPosition(px, py);
-        rcBlock.setSize(Vector2f(32, 16));
-        rcBlock.setFillColor(myRelleno);
-        rcBlock.setOutlineColor(colorBlock);
-        rcBlock.setOutlineThickness(1);
-        rcBlock.setOrigin(16, 8);
-    }
-    //. Dibuja el Bloque
-    void Display(RenderWindow *win){
-        win->draw(rcBlock);
-    }
 
-    void setActivo(bool state){
-       Activo = state;
-    }
-    bool isActivo() { return Activo; }
-
-    RectangleShape getRectangle(){
-       return rcBlock;
-    }
-
-    void set_idColor(int idColor, Color myColor){
-       this->idColor = idColor;
-       rcBlock.setFillColor(myColor);
-    }
-
-    int get_idColor(){ return idColor; }
-
-protected:
-    int  idColor = 0;
-    bool Activo  = true;
-    RectangleShape rcBlock;
+map<Bonus, string> Names = {
+   { Bonus::Laser,   "Laser" },
+   { Bonus::Enlarge, "Enlarge" },
+   { Bonus::Slow,    "Slow" },
+   { Bonus::Catch,   "Catch" },
+   { Bonus::Warp,    "Warp" },
+   { Bonus::Duplex,  "Duplex" },
+   { Bonus::Temp,    "Temp" },
+   { Bonus::Ball3,   "Ball3" },
+   { Bonus::PowerUp, "PowerUp" },
+   { Bonus::Resizer, "Resizer" },
+   { Bonus::Inflate, "Inflate" },
+   { Bonus::Magic,   "Magic" },
+   { Bonus::Globe,   "Globe" },
+   { Bonus::Restore, "Restore" },
+   { Bonus::TopDoor, "TopDoor" },
 };
+
+/******* ENUMERACION DE LOS TIPOS DE ENEMIGOS *********/
+enum Enemy { Cone, Triangle, GlobeGreen, ExpGreen, GlobeRed, ExpRed, GlobeCyan, \
+             ExpCyan, Cube, Sphere, GlobeMix, Orbit, Storm, Arco, Saturn, Magnet, \
+             Ruby, Atom};
+
+map<Enemy, string> Enemies = {
+   { Enemy::Cone,       "Cone" },
+   { Enemy::Triangle,   "Triangle" },
+   { Enemy::GlobeGreen, "GlobeGreen" },
+   { Enemy::ExpGreen,   "ExpGreen" },
+   { Enemy::GlobeRed,   "GlobeRed" },
+   { Enemy::ExpRed,     "ExpRed" },
+   { Enemy::GlobeCyan,  "GlobeCyan" },
+   { Enemy::ExpCyan,    "ExpCyan" },
+   { Enemy::Cube,       "Cube" },
+   { Enemy::Sphere,     "Sphere" },
+   { Enemy::GlobeMix,   "GlobeMix" },
+   { Enemy::Orbit,      "Orbit" },
+   { Enemy::Storm,      "Storm" },
+   { Enemy::Arco,       "Arco" },
+   { Enemy::Saturn,     "Saturn" },
+   { Enemy::Magnet,     "Magnet" },
+   { Enemy::Ruby,       "Ruby" },
+   { Enemy::Atom,       "Atom" },
+};
+
+/******* ENUMERACION PARA LOS EFECTOS **************/
+enum Efecto { Colision, Explosion };
+map<Efecto, string> NameEfecto = {
+   { Efecto::Colision, "Colision"   },
+   { Efecto::Explosion, "Explosion" },
+};
+
+
 
 //. Un contenedor de Bloques de 10 filas y 13 Columnas
 BLOCK **Create_Blocks(int FILAS, int COLMS, int sx, int sy){
@@ -148,90 +108,6 @@ BLOCK **Create_Blocks(int FILAS, int COLMS, int sx, int sy){
     return block;
 }
 
-struct CIRCLE {
-    Font           font;
-    Text           prompt;
-    CircleShape rcCircle;
-    //. Constructor que es una formalidad
-    CIRCLE() {}
-
-    CIRCLE(float px, float py, Color myColor = (Color)NULL){
-        rcCircle.setPosition(px, py);
-        rcCircle.setRadius(15);
-        rcCircle.setFillColor(colorRojo_alpha);
-        rcCircle.setOutlineColor(colorRojo);
-        rcCircle.setOutlineThickness(2);
-        this->px = px;
-        this->py = py;
-        //. La mitad despues del centro de circulo.
-        area = Rect<float>(px -4, py -4, 32, 32);
-    }
-
-    void Update(RenderWindow *win){
-       float mx = Mouse::getPosition(*win).x;
-       float my = Mouse::getPosition(*win).y;
-
-       if(area.contains(Vector2f(mx, my))){
-          if(state != STATE::Pressed){
-             state = STATE::Select;
-          }
-
-       } else {
-          if(state != STATE::Pressed){
-             state = STATE::Normal;
-          }
-       }
-    }
-
-    bool isSelected() {
-       return ((state == STATE::Select) ? true : false);
-    }
-    void Set_Pressed(){  state = STATE::Pressed;  }
-    void Set_Normal() {  state = STATE::Normal;   }
-
-    void Display(RenderWindow *win){
-        switch(state){
-        case STATE::Select:
-           rcCircle.setFillColor(colorSelect_alpha);
-           rcCircle.setOutlineColor(colorSelect);
-           break;
-
-        case STATE::Pressed:
-           rcCircle.setFillColor(colorPressed_alpha);
-           rcCircle.setOutlineColor(colorPressed);
-           break;
-
-        default:
-           if(state != STATE::Pressed){
-              if(ModoEditar){
-                 rcCircle.setFillColor(colorBorde_alpha);
-                 rcCircle.setOutlineColor(colorBorde);
-              } else {
-                 rcCircle.setFillColor(colorRojo_alpha);
-                 rcCircle.setOutlineColor(colorRojo);
-              }
-           }
-        }
-
-        win->draw(rcCircle);
-        win->draw(prompt);
-    }
-
-    void setTexto(string texto, Font font, float Scale = 12){
-        this->font = font ;            //. Guarda una copia de la fuente
-        prompt = Text(texto, this->font, Scale);
-        float bx = (32 - prompt.getLocalBounds().width) / 2.5f;
-        float by = (32 - prompt.getLocalBounds().height) / 2.5f;
-        prompt.setPosition(px +bx, py +by);
-        prompt.setFillColor(colorYellow);
-    }
-private:
-    enum          STATE {Disabled, Normal, Select, Pressed};
-    STATE         state = STATE::Normal;
-    Rect<float>   area;
-    float px, py;
-
-};
 
 bool isMouseInLevel(RenderWindow *win, CIRCLE **level, int TOTAL, int *indice){
    bool Result = false;
@@ -248,9 +124,6 @@ bool isMouseInLevel(RenderWindow *win, CIRCLE **level, int TOTAL, int *indice){
    return Result;
 
 }
-
-
-
 
 //. Contenedor para los botones de Niveles.
 //. Rojo nivel Bloqueado
@@ -285,7 +158,7 @@ CIRCLE **Create_Levels(int FILAS, int COLMS, Font font){
  *
  */
 RectangleShape Create_Rectangle(float px, float py, float width, float height, \
-                                Color myColor, Color myRelleno = (Color)NULL){
+                                Color myColor, Color myRelleno){
     RectangleShape rcBase;
     rcBase.setPosition(px, py);                     //. Posicion.-
     rcBase.setSize(Vector2f(width, height));        //. Tamaño Ancho Alto
@@ -295,108 +168,6 @@ RectangleShape Create_Rectangle(float px, float py, float width, float height, \
 
     return rcBase;
 }
-
-//. Control de la BOLA
-struct BOLA {
-
-   BOLA() {}
-
-   BOLA(float px, float py, float width, float height, Color myColor){
-      rcBola = Create_Rectangle(px, py, width, height, myColor);
-      rcBola.setOrigin((width / 2.0f) , (height / 2.0f));
-      this->px = px;
-      this->py = py;
-   }
-
-   void Update(){
-      if( !StartGame) { return; }
-      if( !Activa ){
-         Activa = true;
-         vx =  frand();
-         vy = -frand();
-      }
-      px += vx;
-      py += vy;
-      rcBola.setPosition(px, py);
-   }
-
-   void reboteLeft()  { vx =  frand(); vy = frand() -frand(); }
-   void reboteRight() { vx = -frand(); vy = frand() -frand(); }
-   void reboteTop()   { vy =  frand(); vx = frand() -frand(); }
-   void reboteDown()  { vy = -frand(); vx = frand() -frand(); }
-
-
-   void Display(RenderWindow *win){
-      win->draw(rcBola);
-   }
-
-   RectangleShape getRectangle(){
-      return rcBola;
-   }
-
-   Vector2f getPosition(){
-      return Vector2f(px, py);
-   }
-
-   void Golpeada(){
-      vx = frand() - frand();
-      vy = frand() - frand();
-   }
-
-//. Proteccion de datos, solo da acceso a clases heredadas,
-//. esta aca, solo porque el editor me muestra un color distinto de las funciones
-//. jajajaa.
-protected:
-   float Activa = false;
-   float px, py, vx, vy;   //. Velocidad en x,y
-   RectangleShape rcBola;
-
-};
-
-
-//. CONTROL DEL PLAYER
-struct PLAYER{
-   float px, py;
-   RectangleShape rcPlayer;
-
-   PLAYER() {}
-
-   PLAYER(float px, float py, float width, float height, Color myColor){
-      rcPlayer = Create_Rectangle(px, py, width, height, myColor);
-      rcPlayer.setOrigin(width / 2.0f, height / 2.0f);
-      this->px = px;
-      this->py = py;
-   }
-
-   void Update() {
-      if(Keyboard::isKeyPressed(Keyboard::Space)){
-         StartGame = true;
-      }
-
-      //. Solo funciona con una tecla presionada una vez;
-      if(Keyboard::isKeyPressed(Keyboard::A) && !Keyboard::isKeyPressed(Keyboard::D)){
-         px -= ((px > 76+1) ? 3 : 0);
-         rcPlayer.setPosition(px, py);
-         //cout << "Left: " << px << endl;
-      }
-
-      if(Keyboard::isKeyPressed(Keyboard::D) && !Keyboard::isKeyPressed(Keyboard::A)){
-         px += ((px < 480+1) ? 3 : 0);
-         rcPlayer.setPosition(px, py);
-         //cout << "Right: " << px << endl;
-      }
-
-   }
-
-   void Display(RenderWindow *win){
-      win->draw(rcPlayer);
-   }
-
-   RectangleShape getRectangle(){
-      return rcPlayer;
-   }
-
-};
 
 //. Calcular los Rectangulos de Colisiones
 bool isCollision(RectangleShape rcBola, RectangleShape rcBase, CForce *force){
@@ -456,112 +227,6 @@ bool isMouseInBlock(RenderWindow *win, BLOCK **block, int TOTAL, int *index){
    return Result;
 }
 
-int index = -1;
-int INDEX = 0;
-int Wheel = 0;
-int SELECTO = 0;
-int Selecto = 0;
-
-string fileSave = "./GameLevel.txt";
-
-#define fillZero(n)   setfill('0') << setw(n)
-
-
-void copyToArray(int level, BLOCK **block, int TOTAL){
-  int filas = 0;
-  int colms = 0;
-
-  for(int index=0; index < TOTAL; index++){
-     colms = index % MAX_COLMS;
-     filas = index / MAX_COLMS;
-     //cout << "filas(" << filas << " colms(" << colms << ") " << block[index]->get_idColor() << endl;
-     ARRAY_LEVEL[level][filas][colms] = block[(TOTAL -1) -index]->get_idColor();
-  }
-}
-
-bool SaveToTexto(int FILAS=15){
-   ofstream mySave;
-
-   int level =  0;
-   int filas =  0;
-
-   mySave.open(fileSave);
-
-   if(mySave.is_open()){
-      mySave << "GameLevel {" << endl;
-      for(int level=0; level < MAX_LEVEL; level++){
-         mySave << "  Level: " << fillZero(2) << level << " filas: " << fillZero(2) << FILAS << endl;
-         for(int filas=0; filas < MAX_FILAS; filas++){
-            mySave << "    " << fillZero(2) << filas << " { ";
-            for(int colms=0; colms < MAX_COLMS; colms++){
-               mySave << ARRAY_LEVEL[level][filas][colms] << " ";
-               cout << "level(" << level << ") filas(" << filas << ") colms(" << colms << ")" << endl;
-            }
-            mySave << " }" << endl;
-         }
-      }
-      mySave << "}";
-      mySave.close();
-   }
-}
-
-bool loadFromFile(){
-
-   fstream myLoad;
-   string  buffer;
-
-   int myLevel = 0;
-   int myFilas = 0;
-   int filas   = 0;
-   int colms   = 0;
-   int idBlock = 0;
-
-   myLoad.open(fileSave);
-
-   if(myLoad.is_open()){
-      while( !myLoad.eof() ){
-         myLoad >> buffer;
-         if(buffer == "Level:"){
-            myLoad >> myLevel;
-            continue;
-         }
-         if(buffer == "filas:"){
-            myLoad >> myFilas;
-            cout << "Level(" << myLevel << ") filas(" << myFilas << ")" << endl;
-            for(filas = 0; filas < MAX_FILAS; filas++){
-               myLoad >> filas;
-               myLoad >> buffer;   //. La llave {
-               for(colms = 0; colms < MAX_COLMS; colms++){
-                  myLoad >> idBlock;
-                  ARRAY_LEVEL[myLevel][filas][colms] = idBlock;
-                  cout << idBlock <<", ";
-               }
-               myLoad >> buffer;  //. la llave }
-               cout << endl;
-            }
-         }
-      }
-      myLoad.close();
-   }
-}
-
-void CopyFromArray(int level, BLOCK **block, int TOTAL){
-
-   int filas = 0;
-   int colms = 0;
-   int index = TOTAL -1;
-   int idColor = 0;
-
-   for(filas=0; filas < MAX_FILAS; filas++){
-      for(colms=0; colms < MAX_COLMS; colms++){
-         idColor = ARRAY_LEVEL[level][filas][colms];
-         block[index]->set_idColor(idColor, data_getColors(idColor));
-         index--;
-      }
-   }
-}
-
-
 /** \brief  Crea una etiqueta de texto
  *
  * \param   px: posicion en x
@@ -581,382 +246,11 @@ Text Create_Label(float px, float py, string texto, Font *font, float Scale){
    return label;
 }
 
-struct BUTTON {
-   BUTTON() {};
-   BUTTON(float px, float py, float width, float height, \
-          string texto, Font *font, float Scale){
-      rcButton = Create_Rectangle(px, py, width, height, colorBorde, colorBorde_alpha);
-      label    = Create_Label(0,0, texto, &*font, Scale);
-      float bx = (width - label.getLocalBounds().width ) / 2.0f;
-      float by = (height - label.getLocalBounds().height) / 3.5f;
-      label.setPosition(px + bx, py + by);
-      label.setFillColor(colorBorde);
-      area = Rect<float>(px, py, width, height);
-   }
-   void Update(RenderWindow *win){
-      float mx = Mouse::getPosition(*win).x;
-      float my = Mouse::getPosition(*win).y;
-      if(area.contains(Vector2f(mx, my))){
-         state = STATE::Select;
-         if(Mouse::isButtonPressed(Mouse::Left)){
-            state = STATE::Pressed;
-         }
-      } else {
-         state = STATE::Normal;
-      }
-   }
 
-   void Display(RenderWindow *win){
-      switch(state){
-      case STATE::Select:
-         rcButton.setFillColor(colorSelect_alpha);
-         rcButton.setOutlineColor(colorSelect);
-         label.setFillColor(colorSelect);
-         break;
 
-      case STATE::Pressed:
-         rcButton.setFillColor(colorPressed_alpha);
-         rcButton.setOutlineColor(colorPressed);
-         label.setFillColor(colorPressed);
-         break;
 
-      default:
-         rcButton.setFillColor(colorBorde_alpha);
-         rcButton.setOutlineColor(colorBorde);
-         label.setFillColor(colorBorde);
-      }
-      win->draw(rcButton);
-      win->draw(label);
-   }
+//. *** COMANDOS GLOBALES (Pendientes) ***
 
-   bool isPressed(){
-      return (state == STATE::Pressed) ? true : false;
-   }
-
-protected:
-   enum  STATE {Normal, Select, Pressed};
-   STATE state = STATE::Normal;
-   Text             label;
-   Rect<float>      area;
-   RectangleShape   rcButton;
-};
-
-/***** CONTROL DE ANIMACIONES *****/
-struct ANIMATION{
-   ANIMATION() {};
-
-   //. Constructor de Copia
-   ANIMATION(const ANIMATION *Other){
-      *this = Other;
-   }
-
-   ANIMATION(Image *image, IntRect area, int filas, int colms){
-      texture.loadFromImage(*image, area);
-      this->filas = filas;
-      this->colms = colms;
-      this->height = area.height / filas;
-      this->width  = area.width  / colms;
-      this->TOTAL  = filas * colms;
-
-      IntRect region(0,0,width,height);
-
-      sprites = (Sprite **) new Sprite[TOTAL];
-      for(int index=0; index < TOTAL; index++){
-         region.left = (index % colms) * width;
-         region.top  = (index / colms) * height;
-         region.width = width;
-         region.height = height;
-         sprites[index] = new Sprite(texture, region);
-         //cout << "region:(" << fillZero(3) << region.left <<","<< \
-         //                      fillZero(3) << region.top <<")" << endl;
-      }
-      modo = MODO::Normal;
-      setElapsed( 0.15 );
-   }
-
-   void setElapsed(float factor){
-      this->factor = factor;
-      delta = seconds(0.1f);
-      lapso = delta.asSeconds() + factor;
-   }
-
-
-   bool Display(RenderWindow *win){
-      bool finished = false;     //. Marca si la animacion a finalizado
-      if(modo == MODO::Back){
-        finished = UpdateBack();
-      } else {
-        finished = UpdatePlay();
-      }
-      sprites[index]->setPosition(px, py);
-      //. Para tratar la posicion desde el Centro de la Animacion;
-      sprites[index]->setOrigin(width / 2.0f, height / 2.0f);
-      win->draw(*sprites[index]);
-      return finished;
-   }
-
-   void setPosition(float px, float py){
-      this->px = px;
-      this->py = py;
-   }
-
-   Vector2f  getPosition(){
-      return Vector2f(px, py);
-   }
-
-   float getWidth()  { return width;   }
-   float getHeight() { return height; }
-
-   enum MODO { Normal, Back};
-   void setModo(MODO modo){
-      this->modo = modo;
-   }
-
-protected:
-   bool  isTimeLapse(){
-      lapso -= delta.asSeconds();
-      if(lapso <= 0.0f){
-         lapso = delta.asSeconds() + factor;
-         return true;
-      }
-      return false;
-   }
-
-
-   bool UpdatePlay(){
-      if ( !isTimeLapse() ) { return false; }
-      index = ((index+1 < TOTAL) ? index +1 : 0);   //. Ciclo hacia adelante
-      return  ((index == TOTAL -1) ? true : false);  //. True en el ultimo Frame
-   }
-
-   bool UpdateBack(){
-      if( !isTimeLapse() ) { return false; }
-      index = ((index > 0000) ? index -1 : TOTAL -1); //. Ciclo hacia atras
-      return  ((index == 0000) ? true : false);       //. True si llega al 000
-
-   }
-
-private:
-   MODO        modo = MODO::Normal;
-   float       px = 0, py =0;
-   int         index = 0;
-   int         TOTAL = 0;
-   int         filas, height;
-   int         colms, width;
-   Texture     texture;
-   Sprite      **sprites;        //. Array de Sprites
-   Time        delta;
-   float       lapso;
-   float       factor;
-
-};
-
-map<string, ANIMATION *> TABLA;
-map<string, ANIMATION *>::iterator it;
-
-/**** ESTRUCTURA DE ENTIDADES, BONOS Y ENEMIGOS *****/
-typedef void (callback) (void *);
-
-struct ENTIDAD {
-   ENTIDAD() {}
-
-   virtual void Update() = 0;
-   virtual void Display(RenderWindow *win) = 0;
-
-   enum GRUPO {Bonus, Enemy, Efecto};
-
-   void SetVelocity(float vx, float vy, GRUPO idGrupo){
-      this->vx = vx;
-      this->vy = vy;
-      this->idGrupo = idGrupo;
-   }
-
-   bool isCollision(RectangleShape spOther){
-      Rect<float> rcOther(spOther.getPosition().x - spOther.getOrigin().x, \
-                          spOther.getPosition().y - spOther.getOrigin().y, \
-                          spOther.getSize().x, \
-                          spOther.getSize().y);
-      if(area.intersects(rcOther)){
-         return true;
-      }
-      return false;
-   }
-
-   void SetCommand(callback *command){
-      this->command = command;
-   }
-
-   void On_Command(void *data){
-      command(data);
-   }
-
-   GRUPO get_idGrupo() { return idGrupo; }
-
-   Vector2f  getPosition() {
-      return Vector2f(px, py);
-   }
-
-
-protected:
-   void SetAnimation(ANIMATION *anim){
-      this->anim = anim;      /**< asigna la animacion    */
-      SetCollider();          /**< asigna el colisionador */
-   }
-
-   void SetCollider(){
-     area = Rect<float>(anim->getPosition().x - (anim->getWidth() / 2.0f), \
-                        anim->getPosition().y - (anim->getHeight() / 2.0f), \
-                        anim->getWidth(), \
-                        anim->getHeight());
-   }
-
-   void SetPosition(float px, float py){
-      this->px = px;
-      this->py = py;
-      SetCollider();
-      anim->setPosition(px, py);
-   }
-
-   GRUPO           idGrupo;     //. tipo de Entidad
-   float          px, py;     //. Posicion
-   float          vx, vy;     //. Velocidad vx,vy;
-   Rect<float>    area;       //. Area de Colision
-   ANIMATION      *anim;      //. Animacion
-   callback       *command;   //. Funcion del Bonus
-
-};
-
-struct BONUS : public ENTIDAD {
-   BONUS() {};
-
-   BONUS(float px, float py, ANIMATION *anim){
-      SetAnimation(anim);
-      SetPosition(px, py);
-   }
-
-   void Update(){
-      SetPosition(px +vx, py+vy);
-   }
-
-   void Display(RenderWindow *win){
-      anim->Display(win);
-   }
-};
-
-struct ENEMY : public ENTIDAD {
-   ENEMY() {}
-
-   ENEMY(float px, float py, ANIMATION *anim){
-      SetAnimation(anim);
-      SetPosition(px, py);
-      golpes = (rand()+8) % 16;    //. Minimo 8 golpes max 16.-
-   }
-   void Display(RenderWindow *win){
-      anim->Display(win);
-   }
-   //. Carga las Referencias de los Colisionadores Principales
-   //. Podria ser una funcion friend, pero aqui se evita escritura en
-   //. El parrafo central de proceso.-
-   void SetColliders(RectangleShape rcTop, RectangleShape rcDown, \
-                     RectangleShape rcLeft, RectangleShape rcRight){
-      this->rcTop  = rcTop;
-      this->rcDown = rcDown;
-      this->rcLeft = rcLeft;
-      this->rcRight = rcRight;
-   }
-
-   //. Comportamiento Diferente
-   void Update(){
-      if( !Activo ){
-         Activo = true;
-         vx = frand() - frand();
-         vy = frand() - frand();
-      }
-      SetPosition(px + vx, py + vy);
-
-      if(isCollision(rcTop))  { vy =  frand(); }
-      if(isCollision(rcDown)) { vy = -frand(); }
-      if(isCollision(rcLeft)) { vx =  frand(); }
-      if(isCollision(rcRight)){ vx = -frand(); }
-
-      //. Otros comportamientos segun el Tipo de Enemigo
-   }
-
-   //. Si el Enemigo es golpeado por la Bola
-   bool isGolpeado(RectangleShape rcBola){
-      retardo -= 1;            //. Cuando se crea, siempre esta colisionando
-      if(retardo <= 0.0){      //. Este retardador le da tiempo a moverse.-
-         if(isCollision(rcBola)){
-            golpes -= 1;
-            cout << "Enemy Golpeado: " << golpes << endl;
-            if(golpes <= 0.0) {  finished = true; }
-            return true;
-         }
-      }
-      return false;
-   }
-
-
-   //. Si el enemigo es Golpeado, cambia de direccion
-   void Golpeado() {
-      vx = frand() - frand();
-      vy = frand() - frand();
-   }
-
-   bool isFinished()  { return finished; }
-
-
-protected:
-   int golpes    =  0;               //. Golpes de resistencia del Enemigo
-   int retardo   = 30;               //. Retardo del detector de colisiones
-   bool finished = false;            //. Enemigo ha sido Destruido
-
-   bool Activo = false;
-   //. Los enemigos Guardan una Referencia de los Bordes Colisionadores
-   RectangleShape   rcTop;
-   RectangleShape   rcDown;
-   RectangleShape   rcLeft;
-   RectangleShape   rcRight;
-};
-
-struct EFECTO : public ENTIDAD {
-   EFECTO() {}
-
-   EFECTO(float px, float py, ANIMATION *anim){
-      SetAnimation(anim);
-      SetPosition(px, py);
-   }
-
-   void Update(){
-      anim->setPosition(px +vx, py +vy);
-   }
-
-   void Display(RenderWindow *win){
-      finished = anim->Display(win);   //. Retornado desde la Animacion
-   }
-
-   bool isFinished() { return finished; }
-
-protected:
-   //. Marca si la animación del efecto ha finalizado.-
-   bool finished = false;
-
-};
-
-
-
-/**** TABLA DE ENTIDADES ******************
-Azul     : Hace la nave más larga
-Roja     : Proporciona a la nave un cañon que puede disparar
-Rosado   : Abre una puerta a la que puedes pasar de nivel
-Celeste  : Te propoporciona tres bolas
-Plomo    : Aumenta el numero de vidas
-Verde    : Atrapa la pelota
-Naranja  : Hace que la pelota vaya más lenta
-*/
-
-vector<ENTIDAD *> ENTIDADES;
-vector<ENTIDAD *>::iterator enty;
 
 //. Crea 2 Cañones de Balas.-
 void Command_Canons(void *data){
@@ -1003,30 +297,9 @@ void Create_Canons(Image *imagen, float px, float py){
     bonus->SetCommand( &Command_Canons);
     ENTIDADES.push_back(bonus);
 }
-/******** ENUMERACION DE LOS BONOS **************/
-enum Bonus { Laser, Enlarge, Slow, Catch, Warp, Duplex, Temp, Ball3, \
-             PowerUp, Resizer, Inflate, Magic, Globe, Restore, TopDoor};
 
 
-map<Bonus, string> Names = {
-   { Bonus::Laser,   "Laser" },
-   { Bonus::Enlarge, "Enlarge" },
-   { Bonus::Slow,    "Slow" },
-   { Bonus::Catch,   "Catch" },
-   { Bonus::Warp,    "Warp" },
-   { Bonus::Duplex,  "Duplex" },
-   { Bonus::Temp,    "Temp" },
-   { Bonus::Ball3,   "Ball3" },
-   { Bonus::PowerUp, "PowerUp" },
-   { Bonus::Resizer, "Resizer" },
-   { Bonus::Inflate, "Inflate" },
-   { Bonus::Magic,   "Magic" },
-   { Bonus::Globe,   "Globe" },
-   { Bonus::Restore, "Restore" },
-   { Bonus::TopDoor, "TopDoor" },
-};
-
-
+//. *** INSTANCIAR BONUS ***
 void MakeBonus(float px, float py, Bonus tipo){
 
    string keyName = Names.at(tipo);
@@ -1052,31 +325,7 @@ void MakeBonus(Vector2f pos, Bonus tipo){
 }
 
 
-enum Enemy { Cone, Triangle, GlobeGreen, ExpGreen, GlobeRed, ExpRed, GlobeCyan, \
-             ExpCyan, Cube, Sphere, GlobeMix, Orbit, Storm, Arco, Saturn, Magnet, \
-             Ruby, Atom};
-
-map<Enemy, string> Enemies = {
-   { Enemy::Cone,       "Cone" },
-   { Enemy::Triangle,   "Triangle" },
-   { Enemy::GlobeGreen, "GlobeGreen" },
-   { Enemy::ExpGreen,   "ExpGreen" },
-   { Enemy::GlobeRed,   "GlobeRed" },
-   { Enemy::ExpRed,     "ExpRed" },
-   { Enemy::GlobeCyan,  "GlobeCyan" },
-   { Enemy::ExpCyan,    "ExpCyan" },
-   { Enemy::Cube,       "Cube" },
-   { Enemy::Sphere,     "Sphere" },
-   { Enemy::GlobeMix,   "GlobeMix" },
-   { Enemy::Orbit,      "Orbit" },
-   { Enemy::Storm,      "Storm" },
-   { Enemy::Arco,       "Arco" },
-   { Enemy::Saturn,     "Saturn" },
-   { Enemy::Magnet,     "Magnet" },
-   { Enemy::Ruby,       "Ruby" },
-   { Enemy::Atom,       "Atom" },
-};
-
+//. *** INSTANCIAR ENEMIGOS ***
 ENEMY *MakeEnemy(float px, float py, Enemy tipo){
    //. Ya es comprobado que estan todas las claves.-
    string keyName = Enemies.at(tipo);
@@ -1107,20 +356,17 @@ ENEMY *MakeEnemy(Vector2f pos, Enemy tipo){
    return MakeEnemy(pos.x, pos.y, tipo);
 }
 
-enum Efecto { Colision, Explosion };
-map<Efecto, string> NameEfecto = {
-   { Efecto::Colision, "Colision"   },
-   { Efecto::Explosion, "Explosion" },
-};
 
 
+
+//. *** INSTANCIAR EFECTOS ***
 EFECTO *MakeEfecto(float px, float py, Efecto tipo){
    string keyName = NameEfecto.at(tipo);
 
    EFECTO *efecto = new EFECTO(px, py, new ANIMATION( *TABLA.at(keyName)));
    if(tipo == Efecto::Colision){
-      float vx = ((rand()%80)+10) -40;
-      float vy = ((rand()%80)+10) -40;
+      float vx = ((rand()%50)+10) -25;
+      float vy = ((rand()%50)+10) -25;
       efecto->SetVelocity(vx, vy, ENTIDAD::GRUPO::Efecto);
    } else {
       efecto->SetVelocity(0,0, ENTIDAD::GRUPO::Efecto);
@@ -1472,9 +718,12 @@ int main()
             int px = (rand() % 200) + 100;
             ENEMY *enemy = MakeEnemy(px, 100, (Enemy) iTipo);
             enemy->SetColliders(rcTop, rcDown, rcLeft, rcRight);
-
          }
 
+         //. Prueba de efectos
+         if(Keyboard::isKeyPressed(Keyboard::F3)){
+            EFECTO *efx = MakeEfecto(Vector2f(250,200), Efecto::Colision);
+         }
 
          if(ModoEditar){
             //.Mouse Rueda (Cambiar de Bloque)
@@ -1662,7 +911,6 @@ int main()
               enemy = MakeEnemy(rcBola->getPosition(), (Enemy)iTipo);
               enemy->SetColliders(rcTop, rcDown, rcLeft, rcRight);
            }
-
            continue;
         }
         block[index]->Display(&win);
@@ -1670,7 +918,8 @@ int main()
 
       //. Despliega la tabla de ENTIDADES
 Revisar:
-      for(enty = ENTIDADES.begin(); enty != ENTIDADES.end(); ++enty){
+      //. auto_ptr,,, very fast.-
+      for(auto enty = ENTIDADES.begin(); enty != ENTIDADES.end(); ++enty){
          //((ENTIDAD*)*enty)->Update();
          //((ENTIDAD*)*enty)->Display(&win);
          ENTIDAD *cosa = (ENTIDAD*)*enty;
@@ -1679,14 +928,15 @@ Revisar:
 
          //. Si el Bono Colisiona al Player
          if(cosa->isCollision(rcPlayer->getRectangle())){
-            cosa->On_Command(rcPlayer);  /**< Ejecuta el Comando de Este Bono */
+            cosa->On_Command(rcPlayer);     /**< Ejecuta el Comando de Este Bono */
 
             //. Si el player es Golpeado por alguna cosa
             EFECTO *efx = MakeEfecto(cosa->getPosition(), Efecto::Explosion);
             efx->Display(&win);
 
-            enty = ENTIDADES.erase(enty);       /**< y luego lo borra de la tabla */
+            enty = ENTIDADES.erase(enty);   /**< y luego lo borra de la tabla */
             goto Revision;
+            //break;
          }
 
          //. Para los efectos se borran cuando Finalizan
@@ -1695,6 +945,7 @@ Revisar:
                //cout << "Terminar el Efecto" << endl;
                enty = ENTIDADES.erase(enty);
                goto Revision;
+               //break;
             }
          }
 
@@ -1706,9 +957,9 @@ Revisar:
             if(enemy->isFinished()){
                EFECTO *efx = MakeEfecto(enemy->getPosition(), Efecto::Explosion);
                efx->Display(&win);
-
                enty = ENTIDADES.erase(enty);
-               break;
+               goto Revision;
+               //break;
             } else {
 
                if(enemy->isGolpeado(rcBola->getRectangle() )){
@@ -1717,8 +968,8 @@ Revisar:
                   //cout << "Crear el Efecto" << endl;
                   EFECTO *efx = MakeEfecto(enemy->getPosition(), Efecto::Colision);
                   efx->Display(&win);
-
-                  break;
+                  goto Revision;
+                  //break;
                }
             }
             continue;
@@ -1732,17 +983,12 @@ Revisar:
 Revision:
          //. Si borra algo y el puntero queda en el ultimo se sale.
          if(enty == ENTIDADES.end() ) { break; }
-
       }
-
 
       //. Desplieque de Animaciones
       //for( it = TABLA.begin(); it != TABLA.end(); ++it){
       //   ((ANIMATION*)it->second)->Display(&win);
       //}
-
-
-
       win.display();
 
     }
