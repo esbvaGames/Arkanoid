@@ -27,7 +27,7 @@ struct ANIMATION{
          region.width = width;
          region.height = height;
          sprites[index] = new Sprite(texture, region);
-         //cout << "region:(" << fillZero(3) << region.left <<","<< \
+         //cout << "region:(" << fillZero(3) << region.left <<","<<
          //                      fillZero(3) << region.top <<")" << endl;
       }
       modo = MODO::Normal;

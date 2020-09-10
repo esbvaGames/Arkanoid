@@ -6,7 +6,7 @@ struct BLOCK {
     BLOCK() {};
 
     //. Si no se especifica el color de relleno, el relleno sera NULL.-
-    BLOCK(float px, float py, Color myRelleno = (Color)NULL ){
+    BLOCK(float px, float py, Color myRelleno = (Color)0 ){
         rcBlock.setPosition(px, py);
         rcBlock.setSize(Vector2f(32, 16));
         rcBlock.setFillColor(myRelleno);

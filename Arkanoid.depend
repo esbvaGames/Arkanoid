@@ -1,13 +1,13 @@
 # depslib dependency file v1.0
-1599687200 source:c:\documents\codeblocks\arkanoid\main.cpp
+1599759343 source:c:\documents\codeblocks\arkanoid\main.cpp
 	"globals.h"
 	"Blocks.h"
 	"Circle.h"
 	"Player.h"
 	"Button.h"
-	"LEVELS.h"
 	"Animation.h"
 	"Entidad.h"
+	"Editor.hpp"
 
 1599672137 c:\documents\codeblocks\arkanoid\levels.h
 
@@ -23,7 +23,7 @@
 	"blocks.h"
 	"levels.h"
 
-1599673012 c:\documents\codeblocks\arkanoid\globals.h
+1599759033 c:\documents\codeblocks\arkanoid\globals.h
 	<SFML/Graphics.hpp>
 	<SFML/Window.hpp>
 	<SFML/System.hpp>
@@ -33,15 +33,24 @@
 	<fstream>
 	<map>
 
-1599669949 c:\documents\codeblocks\arkanoid\blocks.h
+1599759217 c:\documents\codeblocks\arkanoid\blocks.h
 
-1599670535 c:\documents\codeblocks\arkanoid\circle.h
+1599759217 c:\documents\codeblocks\arkanoid\circle.h
 
 1599670867 c:\documents\codeblocks\arkanoid\player.h
 
 1599671077 c:\documents\codeblocks\arkanoid\button.h
 
-1599671283 c:\documents\codeblocks\arkanoid\animation.h
+1599759108 c:\documents\codeblocks\arkanoid\animation.h
 
 1599671399 c:\documents\codeblocks\arkanoid\entidad.h
+
+1599759563 c:\documents\codeblocks\arkanoid\editor.hpp
+
+1599759000 source:c:\documents\codeblocks\arkanoid\editor.cpp
+	"Globals.h"
+	"Blocks.h"
+	"Circle.h"
+	"Button.h"
+	"Editor.hpp"
 

@@ -74,7 +74,7 @@ enum CForce { forceLeft=1, forceRight, forceTop, forceDown };
 float frand();
 Text Create_Label(float px, float py, string texto, Font *font, float Scale);
 RectangleShape Create_Rectangle(float px, float py, float width, float height, \
-                                Color myColor, Color myRelleno = (Color)NULL);
+                                Color myColor, Color myRelleno = (Color)0);
 
 void Command_Canons(void *data);
 void Command_Puertas(void *data);

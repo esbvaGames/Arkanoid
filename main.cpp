@@ -6,9 +6,10 @@
 #include "Circle.h"
 #include "Player.h"
 #include "Button.h"
-#include "LEVELS.h"
 #include "Animation.h"
 #include "Entidad.h"
+
+#include "Editor.hpp"
 
 map<string, ANIMATION *> TABLA;
 map<string, ANIMATION *>::iterator it;
@@ -109,21 +110,6 @@ BLOCK **Create_Blocks(int FILAS, int COLMS, int sx, int sy){
 }
 
 
-bool isMouseInLevel(RenderWindow *win, CIRCLE **level, int TOTAL, int *indice){
-   bool Result = false;
-
-   *indice = -1;
-   for(int index=0; index < TOTAL; index++){
-      level[index]->Update(&*win);
-
-      if(level[index]->isSelected() ){
-         *indice = index;
-         Result = true;
-      }
-   }
-   return Result;
-
-}
 
 //. Contenedor para los botones de Niveles.
 //. Rojo nivel Bloqueado
@@ -201,31 +187,7 @@ bool isCollision(RectangleShape rcBola, RectangleShape rcBase, CForce *force){
    return false;
 }
 
-/****** EDITOR DE BLOQUES DE NIVELES ******/
-bool isMouseInBlock(RenderWindow *win, BLOCK **block, int TOTAL, int *index){
-   bool Result = false;
 
-   RectangleShape rcShape;
-   Rect<float>    rcBlock;
-
-   int px = Mouse::getPosition(*win).x;    //. posicion relativa a la win
-   int py = Mouse::getPosition(*win).y;
-
-   for(int ndx = 0; ndx < TOTAL; ndx++){
-      rcShape = block[ndx]->getRectangle();
-      rcBlock = Rect<float>(rcShape.getPosition().x - rcShape.getOrigin().x, \
-                            rcShape.getPosition().y - rcShape.getOrigin().y, \
-                            rcShape.getSize().x, \
-                            rcShape.getSize().y);
-      if(rcBlock.contains(Vector2f(px, py))){
-         *index = ndx;
-         Result = true;
-         break;
-      }
-   }
-
-   return Result;
-}
 
 /** \brief  Crea una etiqueta de texto
  *
@@ -641,6 +603,11 @@ int main()
     int LEVELS = 8*6;
     CIRCLE **level = Create_Levels(8, 6, font);
 
+    //. Rectangulo de Editor.
+    Editor *editor = new Editor(&font);
+    editor->SetBlock(block, TOTAL);
+    editor->SetLevel(level, LEVELS);
+
     //. Rectangulo del Menu
     RectangleShape rcMenu = Create_Rectangle(560,   4, 234, 470, colorBorde);
 
@@ -649,19 +616,7 @@ int main()
     Text puntos = Create_Label(600, 60, "Puntos: 000000", &font, 20);
     Text vidas = Create_Label(600, 90, "Vidas ..: 00", &font, 20);
 
-    //. Rectangulo de Editor.
-    RectangleShape rcEdit = Create_Rectangle(46, 310, 466, 158, colorBorde, Color(34,38,38));
-    RectangleShape rcCube = Create_Rectangle(100, 342, 32,32, colorBorde);
 
-    Text idBlock = Create_Label(106, 320, "00", &font, 15);
-    Text label_1 = Create_Label(220, 310, "Modo Edicion", &font, 20);
-    Text label_2 = Create_Label(150, 340, "Rueda para cambiar Bloque", &font, 15);
-    Text label_3 = Create_Label(150, 360, "Click en Numeros para Cambiar-Nivel", &font, 15);
-    Text label_4 = Create_Label(150, 390, "Editando Nivel: 00", &font, 15);
-
-    BUTTON *Guardar = new BUTTON(310, 386, 70, 25, "Guardar", &font, 14);
-    BUTTON *Cargar  = new BUTTON(400, 386, 70, 25, "Cargar", &font, 14);
-    BUTTON *Salir   = new BUTTON(230, 425, 70, 25, "Salir", &font, 14);
 
     //. Prueba de Animaciones Bonus ///
     Image imagen;
@@ -723,82 +678,13 @@ int main()
          //. Prueba de efectos
          if(Keyboard::isKeyPressed(Keyboard::F3)){
             EFECTO *efx = MakeEfecto(Vector2f(250,200), Efecto::Colision);
+            efx->Display(&win);
          }
 
          if(ModoEditar){
             //.Mouse Rueda (Cambiar de Bloque)
-            if(evn.type == Event::MouseWheelMoved){
-               Wheel += evn.mouseWheel.delta;
-               Wheel  = min( Wheel, NUM_COLORS );
-               Wheel  = max( Wheel, 0);
-               cout << "Wheel: " << Wheel << endl;
-               rcCube.setFillColor( data_getColors(Wheel) );
+            editor->Process(&win, evn);
 
-               ostringstream buffer;
-               buffer << setfill('0') << setw(2) << Wheel;
-               idBlock.setString(buffer.str());
-            }
-
-            //. Mouse en los Bloques
-            if(isMouseInBlock(&win, block, TOTAL, &index)){
-               //. Seleccionar index
-               cout << index << endl;
-
-               //. insertar bloque
-               if(Mouse::isButtonPressed(Mouse::Left)){
-                  block[index]->set_idColor(Wheel, data_getColors(Wheel));
-               }
-               //. eliminar bloque
-               if(Mouse::isButtonPressed(Mouse::Right)){
-                  block[index]->set_idColor(0, (Color) NULL);
-               }
-
-            //. Mouse en los Niveles
-            } else if(isMouseInLevel(&win, level, LEVELS, &Selecto)){
-
-               if(Mouse::isButtonPressed(Mouse::Left)){
-                  //. Asegura que el Click Cambia una sola vez.
-                  if(Selecto != -1){
-                     if(SELECTO != Selecto){
-                        //. Desmarca el Anterior
-                        level[SELECTO]->Set_Normal();
-                        //. MArca el Actual Seleccionado.
-                        level[Selecto]->Set_Pressed();
-                        //. Copia los bloques Actuales al Array
-                        copyToArray(SELECTO, block, TOTAL);
-                        SELECTO  = Selecto;
-                        cout << "Nivel Selecto: " << Selecto << endl;
-                        //. Copia desde el Array los bloques.-
-                        CopyFromArray(Selecto, block, TOTAL);
-
-                        ostringstream buffer;
-                        buffer << "Editando Nivel: " << fillZero(2) << Selecto +1;
-                        label_4.setString(buffer.str());
-                     } //. Fin, Cambio de Nivel
-                  } //. Fin, posible Seleccion
-               } //. Mouse Pressed
-            }
-
-            Guardar->Update(&win);
-            if(Guardar->isPressed()){
-               cout << "Guardar Archivo" << endl;
-               copyToArray(0, block, TOTAL);
-               SaveToTexto();
-            }
-
-
-            Cargar->Update(&win);
-            if(Cargar->isPressed()){
-               cout << "Cargar Archivo" << endl;
-               loadFromFile();
-               CopyFromArray(0, block, TOTAL);
-            }
-
-
-            Salir->Update(&win);
-            if(Salir->isPressed()){
-               ModoEditar = false;
-            }
          } //. End Modo-Editar
       }  //. end Cyclo de Eventos
 
@@ -822,17 +708,7 @@ int main()
       CForce force;
       //. Solo en el modo de edicion
       if(ModoEditar){
-         win.draw(rcEdit);
-         win.draw(rcCube);
-         win.draw(label_1);
-         win.draw(label_2);
-         win.draw(label_3);
-         win.draw(label_4);
-         win.draw(idBlock);
-         Guardar->Display(&win);
-         Cargar->Display(&win);
-         Salir->Display(&win);
-
+         editor->Display(&win);
 
       } else {
          //. Modo Normal de Juego
@@ -917,7 +793,6 @@ int main()
       }
 
       //. Despliega la tabla de ENTIDADES
-Revisar:
       //. auto_ptr,,, very fast.-
       for(auto enty = ENTIDADES.begin(); enty != ENTIDADES.end(); ++enty){
          //((ENTIDAD*)*enty)->Update();

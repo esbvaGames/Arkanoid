@@ -8,7 +8,7 @@ struct CIRCLE {
     //. Constructor que es una formalidad
     CIRCLE() {}
 
-    CIRCLE(float px, float py, Color myColor = (Color)NULL){
+    CIRCLE(float px, float py, Color myColor = (Color)0){
         rcCircle.setPosition(px, py);
         rcCircle.setRadius(15);
         rcCircle.setFillColor(colorRojo_alpha);
