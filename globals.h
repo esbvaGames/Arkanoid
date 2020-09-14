@@ -86,6 +86,8 @@ void Command_Encoger_Tambor(void *data);
 void Command_Generar_Tornado(void *data);
 void Create_Canons(Image *imagen, float px, float py);
 
+//. Funcion para cambiar el fondo desde el Editor
+void CambiarFondo(RectangleShape *myShape, int index, int patron = 64);
 
 
 

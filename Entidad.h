@@ -45,6 +45,14 @@ struct ENTIDAD {
       return Vector2f(px, py);
    }
 
+   //. Para preguntar si el Efecto, Enemygo se ha destruido
+   bool isFinished()  { return finished; }
+
+   //. Para marcarlo que ha sido destruido
+   void SetFinished( bool state ){
+      finished = state;
+   }
+
 
 protected:
    void SetAnimation(ANIMATION *anim){
@@ -67,12 +75,12 @@ protected:
    }
 
    GRUPO           idGrupo;     //. tipo de Entidad
-   float          px, py;     //. Posicion
-   float          vx, vy;     //. Velocidad vx,vy;
-   Rect<float>    area;       //. Area de Colision
-   ANIMATION      *anim;      //. Animacion
-   callback       *command;   //. Funcion del Bonus
-
+   float          px, py;       //. Posicion
+   float          vx, vy;       //. Velocidad vx,vy;
+   Rect<float>    area;         //. Area de Colision
+   ANIMATION      *anim;        //. Animacion
+   callback       *command;     //. Funcion del Bonus
+   bool finished = false;       //. Enemigo ha sido Destruido
 };
 
 struct BONUS : public ENTIDAD {
@@ -152,13 +160,10 @@ struct ENEMY : public ENTIDAD {
       vy = frand() - frand();
    }
 
-   bool isFinished()  { return finished; }
-
-
 protected:
    int golpes    =  0;               //. Golpes de resistencia del Enemigo
    int retardo   = 30;               //. Retardo del detector de colisiones
-   bool finished = false;            //. Enemigo ha sido Destruido
+
 
    bool Activo = false;
    //. Los enemigos Guardan una Referencia de los Bordes Colisionadores
@@ -184,11 +189,8 @@ struct EFECTO : public ENTIDAD {
       finished = anim->Display(win);   //. Retornado desde la Animacion
    }
 
-   bool isFinished() { return finished; }
-
 protected:
-   //. Marca si la animación del efecto ha finalizado.-
-   bool finished = false;
+   //. El efecto ahora usara el finalizador Generico de la clase Base.
 
 };
 

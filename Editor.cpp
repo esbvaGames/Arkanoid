@@ -41,6 +41,10 @@ void Editor::SetLevel(CIRCLE **level, int LEVELS){
    this->LEVELS = LEVELS;
 }
 
+void Editor::Set_rcGame(RectangleShape *rcGame){
+   this->rcGame = rcGame;
+}
+
 
 Color Editor::data_getColors(int idColor){
    return data[idColor].colors;
@@ -191,15 +195,24 @@ bool Editor::isMouseInBlock(RenderWindow *win, BLOCK **block, int TOTAL, int *in
 
 void Editor::Process(RenderWindow *win, Event evn){
   if(evn.type == Event::MouseWheelMoved){
-      Wheel += evn.mouseWheel.delta;
-      Wheel  = min( Wheel, NUM_COLORS );
-      Wheel  = max( Wheel, 0);
-      cout << "Wheel: " << Wheel << endl;
-      rcCube.setFillColor( data_getColors(Wheel) );
+      if(Keyboard::isKeyPressed(Keyboard::LControl)){
+         iFondo += evn.mouseWheel.delta;
+         iFondo  = min(iFondo, 39);
+         iFondo  = max(iFondo, 00);
+         cout << "Fondo: " << iFondo << endl;
+         CambiarFondo(rcGame, iFondo);
 
-      ostringstream buffer;
-      buffer << setfill('0') << setw(2) << Wheel;
-      idBlock.setString(buffer.str());
+      } else {
+         Wheel += evn.mouseWheel.delta;
+         Wheel  = min( Wheel, NUM_COLORS );
+         Wheel  = max( Wheel, 0);
+         cout << "Wheel: " << Wheel << endl;
+         rcCube.setFillColor( data_getColors(Wheel) );
+
+         ostringstream buffer;
+         buffer << setfill('0') << setw(2) << Wheel;
+         idBlock.setString(buffer.str());
+      }
    }
 
    //. Mouse en los Bloques

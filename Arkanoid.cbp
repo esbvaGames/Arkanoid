@@ -11,7 +11,9 @@
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
+				<Option use_console_runner="0" />
 				<Compiler>
+					<Add option="-std=c++14" />
 					<Add option="-g" />
 					<Add directory="C:/MinGW/include/SFML" />
 					<Add directory="../Arkanoid" />
@@ -30,6 +32,8 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-O2" />
+					<Add option="-Winit-self" />
+					<Add option="-std=c++14" />
 					<Add directory="../Arkanoid" />
 				</Compiler>
 				<Linker>
@@ -40,7 +44,14 @@
 		<Compiler>
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
+			<Add directory="C:/MinGW/include/SFML" />
 		</Compiler>
+		<Linker>
+			<Add library="sfml-system" />
+			<Add library="sfml-window" />
+			<Add library="sfml-graphics" />
+			<Add directory="C:/MinGW/lib/SFML" />
+		</Linker>
 		<Unit filename="Animation.h" />
 		<Unit filename="Blocks.h" />
 		<Unit filename="Button.h" />

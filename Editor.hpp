@@ -54,6 +54,10 @@ class Editor
 
    void SetLevel(CIRCLE **level, int LEVELS);
 
+   //. Para recibir el rcGame
+   void Set_rcGame(RectangleShape *rcGame);
+
+
    bool isMouseInLevel(RenderWindow *win, CIRCLE **level, int TOTAL, int *indice);
    bool isMouseInBlock(RenderWindow *win, BLOCK **block, int TOTAL, int *index);
    void Process(RenderWindow *win, Event evn);
@@ -67,6 +71,7 @@ class Editor
    void CopyFromArray(int level, BLOCK **block, int TOTAL);
 
 protected:
+      int iFondo = 0;
       int LEVELS = 0;
       int TOTAL = 0;
       int index = -1;
@@ -77,6 +82,8 @@ protected:
       string fileSave = "./GameLevel.txt";
 
 private:
+   RectangleShape *rcGame;
+
    RectangleShape rcEdit;
    RectangleShape rcCube;
 

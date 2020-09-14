@@ -14,6 +14,9 @@
 map<string, ANIMATION *> TABLA;
 map<string, ANIMATION *>::iterator it;
 
+using namespace std;
+using namespace sf;
+
 /**** TABLA DE ENTIDADES ******************
 Azul     : Hace la nave más larga
 Roja     : Proporciona a la nave un cañon que puede disparar
@@ -341,6 +344,178 @@ EFECTO *MakeEfecto(Vector2f pos, Efecto tipo){
    return MakeEfecto(pos.x, pos.y, tipo);
 }
 
+/******** Recorta los Fondos y los carga en la tabla FONDOS *****/
+map<int, Image> FONDOS;
+
+void Load_Fondos(Image *image, int filas, int colms, int patron = 64){
+
+   int index = 0;
+
+   for(int f = 0; f < filas; f++){
+      for(int c = 0; c < colms; c++){
+         Image fondo;
+         fondo.create(patron, patron, Color(255,255,255, 255));
+         fondo.copy(*image, 0, 0, IntRect(c*64, f*64, 64,64), false);
+         FONDOS.insert(make_pair(index, fondo));
+         cout << "FONDOS[" << index << "] : {" \
+                           << c*64 << ", " \
+                           << f*64 << "}" << endl;
+         index++;
+      }
+   }
+}
+
+
+/******** Recorta las cañerias y tubos para hacer los bordes ****/
+
+enum Borde { TopL, TopR, DownL, DownR, TubeVL, TubeVR, CoplaVL, CoplaVR, \
+            CoplaHS, CoplaHN };
+
+map<Borde, Image> BORDES;
+
+void Load_Bordes(Image *image){
+
+   Color NegroAplha = Color(0,0,0, 0);
+
+   Image cornerTopL;
+   cornerTopL.create(16, 16, NegroAplha);
+   cornerTopL.copy(*image, 0,0, IntRect(240, 400, 16,16), false);
+   BORDES.insert(make_pair(Borde::TopL, cornerTopL));
+
+   Image cornerTopR;
+   cornerTopR.create(16, 16, NegroAplha);
+   cornerTopR.copy(*image, 0,0, IntRect(256, 400, 16,16), false);
+   BORDES.insert(make_pair(Borde::TopR, cornerTopR));
+
+   Image cornerDownL;
+   cornerDownL.create(16, 16, NegroAplha);
+   cornerDownL.copy(*image, 0,0, IntRect(240, 416, 16,16), false);
+   BORDES.insert(make_pair(Borde::DownL, cornerDownL));
+
+   Image cornerDownR;
+   cornerDownR.create(16, 16, NegroAplha);
+   cornerDownR.copy(*image, 0,0, IntRect(256, 416, 16,16), false);
+   BORDES.insert(make_pair(Borde::DownR, cornerDownR));
+
+   Image tuboVL;
+   tuboVL.create(16, 32, NegroAplha);
+   tuboVL.copy(*image, 0,0, IntRect(144, 336, 16,32), false);
+   BORDES.insert(make_pair(Borde::TubeVL, tuboVL));
+
+   Image tuboVR;
+   tuboVR.create(16, 32, NegroAplha);
+   tuboVR.copy(*image, 0,0, IntRect(192, 336, 16,32), false);
+   BORDES.insert(make_pair(Borde::TubeVR, tuboVR));
+
+   Image coplaVL;
+   coplaVL.create(16, 32, NegroAplha);
+   coplaVL.copy(*image, 0,0, IntRect(144, 384, 16,32), false);
+   BORDES.insert(make_pair(Borde::CoplaVL, coplaVL));
+
+   Image coplaVR;
+   coplaVR.create(16, 32, NegroAplha);
+   coplaVR.copy(*image, 0,0, IntRect(192, 384, 16,32), false);
+   BORDES.insert(make_pair(Borde::CoplaVR, coplaVR));
+
+   Image coplaHS;
+   coplaHS.create(32, 16, NegroAplha);
+   coplaHS.copy(*image, 0,0, IntRect(160, 416, 32,16), false);
+   BORDES.insert(make_pair(Borde::CoplaHS, coplaHS));
+
+   Image coplaHN;
+   coplaHN.create(32, 16, NegroAplha);
+   coplaHN.copy(*image, 0,0, IntRect(192, 416, 32,16), false);
+   BORDES.insert(make_pair(Borde::CoplaHN, coplaHN));
+
+   //. Graba las imagenes, para comprobar los recortes
+   /*
+   int index = 0;
+   for(auto img = BORDES.begin(); img != BORDES.end(); img++){
+       ostringstream keyName;
+       keyName << "./Borde_" << fillZero(2) << index << ".png";
+       ((Image)img->second).saveToFile(keyName.str());
+       index++;
+   }
+   */
+
+}
+
+
+
+
+void CambiarFondo(RectangleShape *myShape, int index, int patron){
+
+   //. Toma el ancho y alto del retangle de juego
+   int width = myShape->getSize().x;
+   int height = myShape->getSize().y;
+
+   Image tileFondo;
+   tileFondo.create(width, height, Color(255,255,255, 0));
+
+   int colms = (width / patron);
+   int filas = (height / patron);
+   int mx = (width % patron)  / 2;  //. Margen para centrar en X
+   int my = (height % patron) / 2;  //. Margen para centrar en Y
+
+   for(int f = 0; f < filas; f++){
+      for(int c = 0; c < colms; c++){
+         tileFondo.copy( FONDOS.at(index), (c*patron)+mx, (f*patron)+my, \
+                         IntRect(0,0, patron, patron), false);
+      }
+   }
+   //. Pegar los tubos y Cañerias sobre el tileFondo
+   colms = 15;
+   for(int c = 0; c < colms; c++){
+      if(c % 2){   //. intercalados, uno por medio
+         tileFondo.copy(BORDES.at(Borde::CoplaHN), (c*32)+mx +16, my, \
+                        IntRect(0,0, 32, 16), true);
+         tileFondo.copy(BORDES.at(Borde::CoplaHN), (c*32)+mx +16, (27*16) + my, \
+                        IntRect(0,0, 32, 16), true);
+      } else {
+         tileFondo.copy(BORDES.at(Borde::CoplaHS), (c*32)+mx +16, my, \
+                        IntRect(0,0, 32, 16), true);
+         tileFondo.copy(BORDES.at(Borde::CoplaHS), (c*32)+mx +16, (27*16) + my, \
+                        IntRect(0,0, 32, 16), true);
+      }
+   }
+
+   filas = 27;
+   for(int f = 0; f < filas; f++){
+      if(f % 3){
+         tileFondo.copy(BORDES.at(Borde::CoplaVL), mx+(00000), (f*16)+my, \
+                        IntRect(0,0, 16,32), true);
+         tileFondo.copy(BORDES.at(Borde::CoplaVR), mx+(16*31), (f*16)+my, \
+                        IntRect(0,0, 16,32), true);
+         f++;
+
+      } else {
+         tileFondo.copy(BORDES.at(Borde::TubeVL), mx+(00000), (f*16)+my, \
+                        IntRect(0,0, 16,32), true);
+         tileFondo.copy(BORDES.at(Borde::TubeVR), mx+(16*31), (f*16)+my, \
+                        IntRect(0,0, 16,32), true);
+      }
+   }
+
+   //. Pone las esquinas
+   tileFondo.copy( BORDES.at(Borde::TopL), mx + (00000), my, \
+                   IntRect(0,0, 16,16), true);
+   tileFondo.copy( BORDES.at(Borde::TopR), mx + (31*16), my, \
+                   IntRect(0,0, 16,16), true);
+
+   tileFondo.copy( BORDES.at(Borde::DownL), mx + (00000),(27*16)+ my, \
+                   IntRect(0,0, 16,16), true);
+   tileFondo.copy( BORDES.at(Borde::DownR), mx + (31*16),(27*16)+ my, \
+                   IntRect(0,0, 16,16), true);
+
+   //. Crea la textura del Fondo y  la fija al Rectangulo
+   Texture *mmmm = new Texture;
+   mmmm->loadFromImage(tileFondo);
+   myShape->setFillColor(Color(255,255,255, 255));
+   myShape->setTexture( mmmm );
+
+}
+
+
 
 /******** LECTURA DE LETRAS BONUS ***************/
 void Load_Bonus(Image *imagen){
@@ -565,7 +740,21 @@ void Load_Efectos(Image *efecto){
 
 }
 
+//. Win7 and XP, Buggs in table asignacion, no se pueden crear objetos
+//. Dentro del mismo ciclo de la tabla ENTIDADES
 
+struct Chispas {
+   Vector2f   posicion;
+   Efecto     tipo;
+
+   Chispas() {}
+   Chispas(Vector2f posicion, Efecto tipo){
+      this->posicion = posicion;
+      this->tipo = tipo;
+   }
+};
+//. Cache para acumular los Efectos.
+vector <Chispas> CHISPAS;
 
 int main()
 {
@@ -607,6 +796,7 @@ int main()
     Editor *editor = new Editor(&font);
     editor->SetBlock(block, TOTAL);
     editor->SetLevel(level, LEVELS);
+    editor->Set_rcGame(&rcGame);
 
     //. Rectangulo del Menu
     RectangleShape rcMenu = Create_Rectangle(560,   4, 234, 470, colorBorde);
@@ -615,6 +805,15 @@ int main()
     Text titulo = Create_Label(600, 10, "Arkanoid.-", &font, 30);
     Text puntos = Create_Label(600, 60, "Puntos: 000000", &font, 20);
     Text vidas = Create_Label(600, 90, "Vidas ..: 00", &font, 20);
+
+    //. Lectura de los Fondos y Bordes.
+    Image fondos;
+    if( !fondos.loadFromFile("./arinoid.bmp")){
+       cout << "Error leyendo Fondos: arinoid.bmp" << endl;
+    }
+    Load_Fondos(&fondos, 4, 10, 64);
+    Load_Bordes(&fondos);
+    CambiarFondo(&rcGame, 0);
 
 
 
@@ -773,13 +972,13 @@ int main()
            block[index]->setActivo(false);
 
            //. La probabilidad es de 1 a 10, para Bonos
-           if( !(rand() % 10) ){
+           if( !(rand() % 3) ){
                int iTipo = rand() % (int)Bonus::TopDoor;
                MakeBonus(rcBola->getPosition(),(Bonus)iTipo);
            }
 
            //. Probabilidad de 5 para Enemigo a trabajar
-           if( !(rand() % 5) ){
+           if( !(rand() % 2) ){
               int iTipo = rand() & (int)Enemy::Atom;
               //. Podria aparecer no necesariamente en la posicion de la Bola
               //. porque puede entrar desde las compuertas de arriba.-
@@ -793,11 +992,23 @@ int main()
       }
 
       //. Despliega la tabla de ENTIDADES
-      //. auto_ptr,,, very fast.-
+
+      CHISPAS.clear();    //. Limpia el Cache de Chispas.-
+
       for(auto enty = ENTIDADES.begin(); enty != ENTIDADES.end(); ++enty){
          //((ENTIDAD*)*enty)->Update();
          //((ENTIDAD*)*enty)->Display(&win);
          ENTIDAD *cosa = (ENTIDAD*)*enty;
+
+         if(cosa->isFinished()){
+            enty = ENTIDADES.erase(enty);
+            //. si el puntero queda al final se Sale
+            if(enty == ENTIDADES.end()  ) { break; }
+            //. si hay mas de una cosa, retrocede
+            if(enty != ENTIDADES.begin()) { advance(enty, -1); }
+            continue;
+         }
+
          cosa->Update();
          cosa->Display(&win);
 
@@ -806,22 +1017,9 @@ int main()
             cosa->On_Command(rcPlayer);     /**< Ejecuta el Comando de Este Bono */
 
             //. Si el player es Golpeado por alguna cosa
-            EFECTO *efx = MakeEfecto(cosa->getPosition(), Efecto::Explosion);
-            efx->Display(&win);
-
-            enty = ENTIDADES.erase(enty);   /**< y luego lo borra de la tabla */
-            goto Revision;
-            //break;
-         }
-
-         //. Para los efectos se borran cuando Finalizan
-         if(cosa->get_idGrupo() == ENTIDAD::GRUPO::Efecto){
-            if( ((EFECTO*)cosa)->isFinished() ){
-               //cout << "Terminar el Efecto" << endl;
-               enty = ENTIDADES.erase(enty);
-               goto Revision;
-               //break;
-            }
+            //. Agrega los efectos en el Cache de Chispas
+            CHISPAS.push_back(Chispas(cosa->getPosition(), Efecto::Explosion));
+            cosa->SetFinished( true );
          }
 
 
@@ -830,21 +1028,16 @@ int main()
          if(cosa->get_idGrupo() == ENTIDAD::GRUPO::Enemy){
             ENEMY *enemy = (ENEMY*)cosa;
             if(enemy->isFinished()){
-               EFECTO *efx = MakeEfecto(enemy->getPosition(), Efecto::Explosion);
-               efx->Display(&win);
-               enty = ENTIDADES.erase(enty);
-               goto Revision;
-               //break;
+               //. Agrega los efectos en el Cache de Chispas
+               CHISPAS.push_back(Chispas(cosa->getPosition(), Efecto::Explosion));
+
             } else {
 
                if(enemy->isGolpeado(rcBola->getRectangle() )){
                   rcBola->Golpeada();
                   enemy->Golpeado();
-                  //cout << "Crear el Efecto" << endl;
-                  EFECTO *efx = MakeEfecto(enemy->getPosition(), Efecto::Colision);
-                  efx->Display(&win);
-                  goto Revision;
-                  //break;
+                  //. Agrega los efectos en el Cache de Chispas
+                  CHISPAS.push_back(Chispas(cosa->getPosition(), Efecto::Explosion));
                }
             }
             continue;
@@ -853,12 +1046,16 @@ int main()
          //. Si el Bono se Pierde
          if(cosa->isCollision(rcDown)){
             cout << "Bono Perdido: " << cosa->get_idGrupo() << endl;
-            enty = ENTIDADES.erase(enty);
+            cosa->SetFinished( true );
          }
-Revision:
-         //. Si borra algo y el puntero queda en el ultimo se sale.
-         if(enty == ENTIDADES.end() ) { break; }
       }
+
+      //. Segun el Cache de Chispas, crea los efectos.-
+      for(auto mmm = CHISPAS.begin(); mmm != CHISPAS.end(); mmm++){
+         Chispas *dta = &*mmm;
+         MakeEfecto(dta->posicion, dta->tipo);
+      }
+
 
       //. Desplieque de Animaciones
       //for( it = TABLA.begin(); it != TABLA.end(); ++it){
