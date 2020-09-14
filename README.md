@@ -47,4 +47,6 @@ https://youtu.be/LuYMQBGgW38
 12. Encapsulado de Class Editor.-
 	https://youtu.be/Y2VbA4nk0k4
 
+13. Revestimiento texturas y Bordes para los Fondos.-
+	https://youtu.be/v-Gi7HafyFQ
 by esbva.-
