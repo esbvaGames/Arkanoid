@@ -49,4 +49,7 @@ https://youtu.be/LuYMQBGgW38
 
 13. Revestimiento texturas y Bordes para los Fondos.-
 	https://youtu.be/v-Gi7HafyFQ
+	
+14. Fijar las Animaciones de las Compuertas.-
+	https://youtu.be/mHiMeBPrz2A
 by esbva.-

@@ -2,11 +2,11 @@
 #define _MAIN_
 
 #include "globals.h"
+#include "Animation.h"
 #include "Blocks.h"
 #include "Circle.h"
 #include "Player.h"
 #include "Button.h"
-#include "Animation.h"
 #include "Entidad.h"
 
 #include "Editor.hpp"
@@ -438,6 +438,24 @@ void Load_Bordes(Image *image){
    }
    */
 
+   //. Carga las animaciones de las Compuertas
+   image->createMaskFromColor(Color(0,0,0, 0));
+
+   ANIMATION *Opening_L = new ANIMATION(image, IntRect(0, 432, 64,32), 1,4);
+   Opening_L->setElapsed(0.25);
+   TABLA.insert(make_pair("Opening_L", Opening_L));
+
+   ANIMATION *Opening_R = new ANIMATION(image, IntRect(64, 432, 64,32), 1,4);
+   Opening_R->setElapsed(0.25);
+   TABLA.insert(make_pair("Opening_R", Opening_R));
+
+   ANIMATION *OpenDoor_L = new ANIMATION(image, IntRect(0,464, 128,32), 1,8);
+   TABLA.insert(make_pair("OpenDoor_L", OpenDoor_L));
+
+   ANIMATION *OpenDoor_R = new ANIMATION(image, IntRect(0,496, 128,32), 1,8);
+   TABLA.insert(make_pair("OpenDoor_R", OpenDoor_R));
+
+
 }
 
 
@@ -480,8 +498,8 @@ void CambiarFondo(RectangleShape *myShape, int index, int patron){
    }
 
    filas = 27;
-   for(int f = 0; f < filas; f++){
-      if(f % 3){
+   for(int f = 1; f < filas -1; f++){
+      if(f < 25 && (f % 3)){      //. Pone un tubo liso al final
          tileFondo.copy(BORDES.at(Borde::CoplaVL), mx+(00000), (f*16)+my, \
                         IntRect(0,0, 16,32), true);
          tileFondo.copy(BORDES.at(Borde::CoplaVR), mx+(16*31), (f*16)+my, \
@@ -773,9 +791,12 @@ int main()
     RectangleShape rcDown = Create_Rectangle(46, 448, 466, 20, colorBlock);
 
     //. Colisionadores de las Compuertas
-    RectangleShape rcDoor_L = Create_Rectangle(  14, 380, 32, 64, colorDoors);
-    RectangleShape rcDoor_R = Create_Rectangle( 511, 380, 32, 64, colorDoors);
+    //RectangleShape rcDoor_L = Create_Rectangle(  14, 380, 32, 64, colorDoors);
+    //RectangleShape rcDoor_R = Create_Rectangle( 511, 380, 32, 64, colorDoors);
     //RectangleShape rcPlayer = Create_Rectangle( 250, 400, 64, 20, colorPlayer);
+
+    PUERTA *rcDoor_L = new PUERTA( 33, 420, 16,32, colorDoors, (Color)0 );
+    PUERTA *rcDoor_R = new PUERTA(525, 420, 16,32, colorDoors, (Color)0 );
 
 
     BOLA *rcBola = new BOLA(250, 398, 16,16, Color( 90, 90,255));
@@ -808,12 +829,19 @@ int main()
 
     //. Lectura de los Fondos y Bordes.
     Image fondos;
-    if( !fondos.loadFromFile("./arinoid.bmp")){
-       cout << "Error leyendo Fondos: arinoid.bmp" << endl;
+    if( !fondos.loadFromFile("./arinoid.png")){
+       cout << "Error leyendo Fondos: arinoid.png" << endl;
     }
     Load_Fondos(&fondos, 4, 10, 64);
     Load_Bordes(&fondos);
     CambiarFondo(&rcGame, 0);
+
+    //. Asigna las Animaciones a las Compuertas.
+    rcDoor_L->SetAnimation(new ANIMATION(*TABLA.at("Opening_L")), \
+                           new ANIMATION(*TABLA.at("OpenDoor_L")));
+
+    rcDoor_R->SetAnimation(new ANIMATION(*TABLA.at("Opening_R")), \
+                           new ANIMATION(*TABLA.at("OpenDoor_R")));
 
 
 
@@ -851,6 +879,17 @@ int main()
          //. habilita la tecla Escape para cerrar la Window
          if(Keyboard::isKeyPressed(Keyboard::Escape)){
             win.close();
+         }
+
+         if(Keyboard::isKeyPressed(Keyboard::F4)){
+            if(rcDoor_L->getModo() == PUERTA::MODO::Cerrada){
+               rcDoor_L->setModo(PUERTA::MODO::Abriendo);
+               rcDoor_R->setModo(PUERTA::MODO::Abriendo);
+            }
+            if(rcDoor_L->getModo() == PUERTA::MODO::Abierta){
+               rcDoor_L->setModo(PUERTA::MODO::Cerrando);
+               rcDoor_R->setModo(PUERTA::MODO::Cerrando);
+            }
          }
 
          //. Activar Modo-Editar
@@ -901,8 +940,11 @@ int main()
       win.draw(rcTop);
       win.draw(rcDown);
 
-      win.draw(rcDoor_L);
-      win.draw(rcDoor_R);
+      //win.draw(rcDoor_L);
+      //win.draw(rcDoor_R);
+
+      rcDoor_L->Display(&win);
+      rcDoor_R->Display(&win);
 
       CForce force;
       //. Solo en el modo de edicion

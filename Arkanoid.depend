@@ -1,11 +1,11 @@
 # depslib dependency file v1.0
-1600101953 source:c:\documents\codeblocks\arkanoid\main.cpp
+1600128926 source:c:\documents\codeblocks\arkanoid\main.cpp
 	"globals.h"
+	"Animation.h"
 	"Blocks.h"
 	"Circle.h"
 	"Player.h"
 	"Button.h"
-	"Animation.h"
 	"Entidad.h"
 	"Editor.hpp"
 
@@ -37,11 +37,11 @@
 
 1599759217 c:\documents\codeblocks\arkanoid\circle.h
 
-1599670867 c:\documents\codeblocks\arkanoid\player.h
+1600127764 c:\documents\codeblocks\arkanoid\player.h
 
 1599671077 c:\documents\codeblocks\arkanoid\button.h
 
-1599759108 c:\documents\codeblocks\arkanoid\animation.h
+1600127407 c:\documents\codeblocks\arkanoid\animation.h
 
 1600096587 c:\documents\codeblocks\arkanoid\entidad.h
 

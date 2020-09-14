@@ -104,6 +104,88 @@ struct PLAYER{
 };
 
 
+struct PUERTA {
+   PUERTA() {}
+
+   PUERTA(float px, float py, float width, float height, \
+          Color myColor, Color myRelleno = (Color)0) {
+
+     rcDoor = Create_Rectangle(px, py, width, height, myColor, myRelleno);
+     rcDoor.setOrigin(width / 2.0f, height / 2.0f);
+     area = Rect<float>(px -(width/2.0f), py -(height/2.0f), width, height);
+     this->px = px;
+     this->py = py;
+   }
+
+   void SetAnimation(ANIMATION *anim, ANIMATION *rayo){
+      this->anim = anim;
+      this->anim->setPosition(px, py);
+      this->anim->setModo(ANIMATION::MODO::Stop, 0);
+
+      this->rayo = rayo;
+      this->rayo->setPosition(px, py);
+      this->rayo->setModo(ANIMATION::MODO::Stop, 0);
+   }
+
+   void Display(RenderWindow *win){
+      win->draw(rcDoor);
+
+      switch(modo){
+      case MODO::Cerrando:
+         if(anim->Display(win)){
+            modo = MODO::Cerrada;
+            anim->setModo(ANIMATION::MODO::Stop, 0);
+            rayo->setModo(ANIMATION::MODO::Stop);
+         }
+         break;
+
+      case MODO::Abierta:
+         rayo->Display(win);
+         break;
+
+      case MODO::Abriendo:
+         if(anim->Display(win)){
+            modo = MODO::Abierta;
+            anim->setModo(ANIMATION::MODO::Stop);
+            rayo->setModo(ANIMATION::MODO::Normal);
+         }
+         break;
+
+      default:
+         if(anim->Display(win)){
+            modo = MODO::Abriendo;
+            anim->setModo(ANIMATION::MODO::Normal);
+         }
+      }
+   }
+
+   enum MODO { Cerrada, Abriendo, Abierta, Cerrando };
+   void setModo(MODO modo){
+      this->modo = modo;
+      if(modo == MODO::Abriendo){
+         anim->setModo(ANIMATION::MODO::Normal);
+      }
+      if(modo == MODO::Cerrando){
+         anim->setModo(ANIMATION::MODO::Back);
+      }
+   }
+
+   MODO getModo() { return modo; }
+
+   RectangleShape getRectangle() { return rcDoor; }
+
+
+protected:
+   MODO  modo = MODO::Cerrada;
+   float px   = 0;
+   float py   = 0;
+   Rect<float>     area;
+   ANIMATION       *anim;
+   ANIMATION       *rayo;
+   RectangleShape  rcDoor;
+
+};
+
 
 
 #endif // _PLAYER_H

@@ -29,6 +29,9 @@ struct ANIMATION{
          sprites[index] = new Sprite(texture, region);
          //cout << "region:(" << fillZero(3) << region.left <<","<<
          //                      fillZero(3) << region.top <<")" << endl;
+
+         //. Para tratar la posicion desde el Centro de la Animacion;
+         sprites[index]->setOrigin(width / 2.0f, height / 2.0f);
       }
       modo = MODO::Normal;
       setElapsed( 0.15 );
@@ -43,14 +46,14 @@ struct ANIMATION{
 
    bool Display(RenderWindow *win){
       bool finished = false;     //. Marca si la animacion a finalizado
-      if(modo == MODO::Back){
-        finished = UpdateBack();
-      } else {
-        finished = UpdatePlay();
+      if(modo != MODO::Stop) {   //. Para animacion detenida
+         if(modo == MODO::Back){
+           finished = UpdateBack();
+         } else {
+           finished = UpdatePlay();
+         }
       }
       sprites[index]->setPosition(px, py);
-      //. Para tratar la posicion desde el Centro de la Animacion;
-      sprites[index]->setOrigin(width / 2.0f, height / 2.0f);
       win->draw(*sprites[index]);
       return finished;
    }
@@ -67,9 +70,10 @@ struct ANIMATION{
    float getWidth()  { return width;   }
    float getHeight() { return height; }
 
-   enum MODO { Normal, Back};
-   void setModo(MODO modo){
+   enum MODO { Normal, Back, Stop};
+   void setModo(MODO modo, int index = 0){
       this->modo = modo;
+      this->index = index;
    }
 
 protected:
