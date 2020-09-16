@@ -438,27 +438,27 @@ void Load_Bordes(Image *image){
    }
    */
 
-   //. Carga las animaciones de las Compuertas
-   image->createMaskFromColor(Color(0,0,0, 0));
-
-   ANIMATION *Opening_L = new ANIMATION(image, IntRect(0, 432, 64,32), 1,4);
-   Opening_L->setElapsed(0.25);
-   TABLA.insert(make_pair("Opening_L", Opening_L));
-
-   ANIMATION *Opening_R = new ANIMATION(image, IntRect(64, 432, 64,32), 1,4);
-   Opening_R->setElapsed(0.25);
-   TABLA.insert(make_pair("Opening_R", Opening_R));
-
-   ANIMATION *OpenDoor_L = new ANIMATION(image, IntRect(0,464, 128,32), 1,8);
-   TABLA.insert(make_pair("OpenDoor_L", OpenDoor_L));
-
-   ANIMATION *OpenDoor_R = new ANIMATION(image, IntRect(0,496, 128,32), 1,8);
-   TABLA.insert(make_pair("OpenDoor_R", OpenDoor_R));
-
 
 }
 
+void Load_Puertas(Image *image){
+   //. Carga las animaciones de las Compuertas
+   image->createMaskFromColor(Color(0,0,0, 0));
 
+   ANIMATION *Opening_L = new ANIMATION(image, IntRect(0, 0, 180,42), 1,10);
+   Opening_L->setElapsed(0.25);
+   TABLA.insert(make_pair("Opening_L", Opening_L));
+
+   ANIMATION *Opening_R = new ANIMATION(image, IntRect(0, 0, 180,42), 1,10);
+   Opening_R->setElapsed(0.25);
+   TABLA.insert(make_pair("Opening_R", Opening_R));
+
+   ANIMATION *OpenDoor_L = new ANIMATION(image, IntRect(180, 0, 270,42), 1,15);
+   TABLA.insert(make_pair("OpenDoor_L", OpenDoor_L));
+
+   ANIMATION *OpenDoor_R = new ANIMATION(image, IntRect(180, 0, 270,42), 1,15);
+   TABLA.insert(make_pair("OpenDoor_R", OpenDoor_R));
+}
 
 
 void CambiarFondo(RectangleShape *myShape, int index, int patron){
@@ -525,6 +525,8 @@ void CambiarFondo(RectangleShape *myShape, int index, int patron){
    tileFondo.copy( BORDES.at(Borde::DownR), mx + (31*16),(27*16)+ my, \
                    IntRect(0,0, 16,16), true);
 
+   //tileFondo.saveToFile("./TileFondo.png");
+
    //. Crea la textura del Fondo y  la fija al Rectangulo
    Texture *mmmm = new Texture;
    mmmm->loadFromImage(tileFondo);
@@ -532,7 +534,6 @@ void CambiarFondo(RectangleShape *myShape, int index, int patron){
    myShape->setTexture( mmmm );
 
 }
-
 
 
 /******** LECTURA DE LETRAS BONUS ***************/
@@ -795,8 +796,8 @@ int main()
     //RectangleShape rcDoor_R = Create_Rectangle( 511, 380, 32, 64, colorDoors);
     //RectangleShape rcPlayer = Create_Rectangle( 250, 400, 64, 20, colorPlayer);
 
-    PUERTA *rcDoor_L = new PUERTA( 33, 420, 16,32, colorDoors, (Color)0 );
-    PUERTA *rcDoor_R = new PUERTA(525, 420, 16,32, colorDoors, (Color)0 );
+    PUERTA *rcDoor_L = new PUERTA( 32, 420, 16,32, colorDoors, (Color)0 );
+    PUERTA *rcDoor_R = new PUERTA(527, 420, 16,32, colorDoors, (Color)0 );
 
 
     BOLA *rcBola = new BOLA(250, 398, 16,16, Color( 90, 90,255));
@@ -836,6 +837,11 @@ int main()
     Load_Bordes(&fondos);
     CambiarFondo(&rcGame, 0);
 
+    Image puertas;
+    if( !puertas.loadFromFile("./Doors_18x42.png")){
+       cout << "Error leyendo Doors_18x42.png" << endl;
+    }
+    Load_Puertas(&puertas);
     //. Asigna las Animaciones a las Compuertas.
     rcDoor_L->SetAnimation(new ANIMATION(*TABLA.at("Opening_L")), \
                            new ANIMATION(*TABLA.at("OpenDoor_L")));

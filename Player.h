@@ -128,7 +128,7 @@ struct PUERTA {
    }
 
    void Display(RenderWindow *win){
-      win->draw(rcDoor);
+      //win->draw(rcDoor);
 
       switch(modo){
       case MODO::Cerrando:
@@ -166,7 +166,7 @@ struct PUERTA {
          anim->setModo(ANIMATION::MODO::Normal);
       }
       if(modo == MODO::Cerrando){
-         anim->setModo(ANIMATION::MODO::Back);
+         anim->setModo(ANIMATION::MODO::Back, 7);
       }
    }
 
