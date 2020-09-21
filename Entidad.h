@@ -1,7 +1,7 @@
 #ifndef _ENTIDAD_H
 #define _ENTIDAD_H
 
-
+using namespace sf;
 
 /**** ESTRUCTURA DE ENTIDADES, BONOS Y ENEMIGOS *****/
 typedef void (callback) (void *);
@@ -53,6 +53,18 @@ struct ENTIDAD {
       finished = state;
    }
 
+   RectangleShape GetCollider(){
+      shape.setFillColor((Color)0);
+      shape.setOutlineColor(colorSelect);
+      shape.setOutlineThickness(1);
+
+      shape.setPosition(px, py);
+      shape.setOrigin(anim->getWidth()/2.0f, anim->getHeight()/2.0f);
+      shape.setSize(Vector2f(anim->getWidth(), anim->getHeight()));
+
+      return shape;
+   }
+
 
 protected:
    void SetAnimation(ANIMATION *anim){
@@ -81,6 +93,7 @@ protected:
    ANIMATION      *anim;        //. Animacion
    callback       *command;     //. Funcion del Bonus
    bool finished = false;       //. Enemigo ha sido Destruido
+   RectangleShape  shape;       //. Entrega el Colisionador de la Entidad
 };
 
 struct BONUS : public ENTIDAD {
@@ -110,6 +123,7 @@ struct ENEMY : public ENTIDAD {
    }
    void Display(RenderWindow *win){
       anim->Display(win);
+      win->draw( GetCollider() );
    }
    //. Carga las Referencias de los Colisionadores Principales
    //. Podria ser una funcion friend, pero aqui se evita escritura en

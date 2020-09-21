@@ -76,6 +76,11 @@ struct ANIMATION{
       this->index = index;
    }
 
+   void IndexReset(int index){
+      this->index = index;
+   }
+
+
 protected:
    bool  isTimeLapse(){
       lapso -= delta.asSeconds();

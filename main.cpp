@@ -837,6 +837,10 @@ int main()
     Load_Bordes(&fondos);
     CambiarFondo(&rcGame, 0);
 
+    rcPlayer->SetImagenes(&fondos);
+    rcPlayer->ChangeImage(PLAYER::TIPO::Normal);
+
+
     Image puertas;
     if( !puertas.loadFromFile("./Doors_18x42.png")){
        cout << "Error leyendo Doors_18x42.png" << endl;
@@ -983,7 +987,9 @@ int main()
 
          rcPlayer->Update();
          rcPlayer->Display(&win);
-         if(isCollision(rcBola->getRectangle(), rcPlayer->getRectangle(), &force)){
+         if(isCollision(rcBola->getRectangle(), rcPlayer->getRectangle(), &force) || \
+            rcPlayer->isInflatedCollision(rcBola->getRectangle())){
+
             if(force == CForce::forceLeft) { rcBola->reboteLeft(); }
             if(force == CForce::forceRight) { rcBola->reboteRight(); }
             rcBola->reboteDown();
@@ -1060,14 +1066,16 @@ int main()
          cosa->Update();
          cosa->Display(&win);
 
-         //. Si el Bono Colisiona al Player
-         if(cosa->isCollision(rcPlayer->getRectangle())){
-            cosa->On_Command(rcPlayer);     /**< Ejecuta el Comando de Este Bono */
+         //. Si el Bono / Enemigo Colisiona al Player
+         if(cosa->get_idGrupo() != ENTIDAD::GRUPO::Efecto){
+            if(rcPlayer->isInflatedCollision(cosa->GetCollider())){
+               cosa->On_Command(rcPlayer);     /**< Ejecuta el Comando de Este Bono */
 
-            //. Si el player es Golpeado por alguna cosa
-            //. Agrega los efectos en el Cache de Chispas
-            CHISPAS.push_back(Chispas(cosa->getPosition(), Efecto::Explosion));
-            cosa->SetFinished( true );
+               //. Si el player es Golpeado por alguna cosa
+               //. Agrega los efectos en el Cache de Chispas
+               CHISPAS.push_back(Chispas(cosa->getPosition(), Efecto::Explosion));
+               cosa->SetFinished( true );
+            }
          }
 
 

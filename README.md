@@ -52,4 +52,12 @@ https://youtu.be/LuYMQBGgW38
 	
 14. Fijar las Animaciones de las Compuertas.-
 	https://youtu.be/mHiMeBPrz2A
+	 Compuertas Mini, Cambio de Imagenes y Animacion
+	 https://youtu.be/Youu5jFjvAQ
+	 
+15. Simulación del Playe Inflado, adicional de 3 paletas que se mueven con 
+	 retardo, a la posición principal.-
+	 https://youtu.be/Dxq11LE2SaE
+	 
+	 
 by esbva.-
