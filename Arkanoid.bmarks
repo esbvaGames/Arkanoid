@@ -1,43 +1,41 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <BrowseTracker_layout_file>
 	<ActiveTarget name="Debug" />
-	<File name="Circle.h" open="1" top="0" tabpos="4">
-		<Cursor position="255" topLine="0" />
-	</File>
-	<File name="Editor.hpp" open="1" top="0" tabpos="10">
-		<Cursor position="2154" topLine="68" />
-	</File>
 	<File name="Entidad.h" open="1" top="0" tabpos="8">
-		<Cursor position="1314" topLine="66" />
-		<BrowseMarks positions="" />
-		<Book_Marks positions="" />
+		<Cursor position="3390" topLine="113" />
 	</File>
-	<File name="Player.h" open="1" top="0" tabpos="5">
-		<Cursor position="4873" topLine="158" />
-		<BrowseMarks positions="12522" />
-		<Book_Marks positions="" />
+	<File name="Blocks.h" open="1" top="0" tabpos="3">
+		<Cursor position="265" topLine="2" />
 	</File>
 	<File name="Animation.h" open="1" top="0" tabpos="7">
 		<Cursor position="2267" topLine="69" />
 	</File>
-	<File name="Button.h" open="1" top="0" tabpos="6">
-		<Cursor position="1908" topLine="34" />
+	<File name="Player.h" open="1" top="1" tabpos="5">
+		<Cursor position="4661" topLine="204" />
+		<BrowseMarks positions="12522" />
+		<Book_Marks positions="" />
 	</File>
-	<File name="main.cpp" open="1" top="1" tabpos="1">
-		<Cursor position="27080" topLine="587" />
-		<BrowseMarks positions="11649,25399,35194" />
-		<Book_Marks positions="34329,30042,29734,28981,34329,23459,25160,26111,26428,27713,34335,11297,11361,25189,35735,37242,36971,30052,34178,34329" />
-	</File>
-	<File name="Globals.h" open="1" top="0" tabpos="2">
-		<Cursor position="0" topLine="9" />
+	<File name="Editor.cpp" open="1" top="0" tabpos="9">
+		<Cursor position="5676" topLine="274" />
 	</File>
 	<File name="GameLevel.txt" open="0" top="0" tabpos="2">
 		<Cursor position="0" topLine="0" />
 	</File>
-	<File name="Editor.cpp" open="1" top="0" tabpos="9">
-		<Cursor position="5676" topLine="272" />
+	<File name="Globals.h" open="1" top="0" tabpos="2">
+		<Cursor position="0" topLine="9" />
 	</File>
-	<File name="Blocks.h" open="1" top="0" tabpos="3">
-		<Cursor position="265" topLine="2" />
+	<File name="main.cpp" open="1" top="0" tabpos="1">
+		<Cursor position="35221" topLine="823" />
+		<BrowseMarks positions="11649,25399,35194" />
+		<Book_Marks positions="34329,30042,29734,28981,34329,23459,25160,26111,26428,27713,34335,11297,11361,25189,35735,37242,36971,30052,34178,34329" />
+	</File>
+	<File name="Button.h" open="1" top="0" tabpos="6">
+		<Cursor position="1908" topLine="34" />
+	</File>
+	<File name="Editor.hpp" open="1" top="0" tabpos="10">
+		<Cursor position="2154" topLine="68" />
+	</File>
+	<File name="Circle.h" open="1" top="0" tabpos="4">
+		<Cursor position="255" topLine="0" />
 	</File>
 </BrowseTracker_layout_file>

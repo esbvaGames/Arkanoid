@@ -218,7 +218,7 @@ struct PLAYER{
       if(inflated){
          if(myOther.intersects(GetCollider( paddle_0)) || \
             myOther.intersects(GetCollider( paddle_1)) || \
-            myOther.intersects(GetCollider( paddle_1))) {
+            myOther.intersects(GetCollider( paddle_2))) {
 
             return true;
          }
