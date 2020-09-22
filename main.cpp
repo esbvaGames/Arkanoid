@@ -1,7 +1,7 @@
 
 #define _MAIN_
 
-#include "globals.h"
+#include "Globals.h"
 #include "Animation.h"
 #include "Blocks.h"
 #include "Circle.h"
