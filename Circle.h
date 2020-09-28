@@ -41,6 +41,7 @@ struct CIRCLE {
     }
     void Set_Pressed(){  state = STATE::Pressed;  }
     void Set_Normal() {  state = STATE::Normal;   }
+    void Set_Select() {  state = STATE::Select;   }
 
     void Display(RenderWindow *win){
         switch(state){

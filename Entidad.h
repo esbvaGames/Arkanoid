@@ -86,7 +86,7 @@ protected:
       anim->setPosition(px, py);
    }
 
-   GRUPO           idGrupo;     //. tipo de Entidad
+   GRUPO          idGrupo;      //. tipo de Entidad
    float          px, py;       //. Posicion
    float          vx, vy;       //. Velocidad vx,vy;
    Rect<float>    area;         //. Area de Colision
@@ -105,12 +105,22 @@ struct BONUS : public ENTIDAD {
    }
 
    void Update(){
+      if( !StartGame ) { return; }
       SetPosition(px +vx, py+vy);
    }
 
    void Display(RenderWindow *win){
       anim->Display(win);
    }
+
+   void set_BonusTipo( int idTipo){
+      this->idTipo = idTipo;
+   }
+
+   int get_BonusTipo() { return idTipo; }
+
+protected:
+   int   idTipo;      //. Identificador del Tipo de Bonus.
 };
 
 struct ENEMY : public ENTIDAD {
@@ -138,6 +148,7 @@ struct ENEMY : public ENTIDAD {
 
    //. Comportamiento Diferente
    void Update(){
+      if( !StartGame ){ return; }
       if( !Activo ){
          Activo = true;
          vx = frand() - frand();
@@ -152,6 +163,11 @@ struct ENEMY : public ENTIDAD {
 
       //. Otros comportamientos segun el Tipo de Enemigo
    }
+
+   void set_EnemyTipo(int idTipo){
+      this->idTipo = idTipo;
+   }
+   int get_EnemyTipo(){ return idTipo; }
 
    //. Si el Enemigo es golpeado por la Bola
    bool isGolpeado(RectangleShape rcBola){
@@ -175,6 +191,7 @@ struct ENEMY : public ENTIDAD {
    }
 
 protected:
+   int idTipo    =  0;               //. Identificador del Tipo de Enemigo.
    int golpes    =  0;               //. Golpes de resistencia del Enemigo
    int retardo   = 30;               //. Retardo del detector de colisiones
 
@@ -196,6 +213,7 @@ struct EFECTO : public ENTIDAD {
    }
 
    void Update(){
+      if( !StartGame ){ return;  }
       anim->setPosition(px +vx, py +vy);
    }
 

@@ -41,6 +41,7 @@ enum CForce { forceLeft=1, forceRight, forceTop, forceDown };
 
    int   Puntaje   = 0;
    bool  StartGame = false;
+   bool  OpenLevel = false;
    bool  ModoEditar = false;
    bool  Mouse_in_block = false;
 
@@ -62,6 +63,7 @@ enum CForce { forceLeft=1, forceRight, forceTop, forceDown };
 
    extern int Puntaje;
    extern bool StartGame;
+   extern bool OpenLevel;
    extern bool ModoEditar;
    extern bool Mouse_in_block;
 
@@ -76,19 +78,9 @@ Text Create_Label(float px, float py, string texto, Font *font, float Scale);
 RectangleShape Create_Rectangle(float px, float py, float width, float height, \
                                 Color myColor, Color myRelleno = (Color)0);
 
-void Command_Canons(void *data);
-void Command_Puertas(void *data);
-void Command_Bolas_x3(void *data);
-void Command_Vida_Extra(void *data);
-void Command_Atrapar_Bola(void *data);
-void Command_Bola_Lenta(void *data);
-void Command_Encoger_Tambor(void *data);
-void Command_Generar_Tornado(void *data);
-void Create_Canons(Image *imagen, float px, float py);
-
 //. Funcion para cambiar el fondo desde el Editor
 void CambiarFondo(RectangleShape *myShape, int index, int patron = 64);
-
+void Create_Bullets(float px, float py, Image *image);
 
 
 

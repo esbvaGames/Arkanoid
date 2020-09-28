@@ -12,7 +12,6 @@
 #include "Editor.hpp"
 
 map<string, ANIMATION *> TABLA;
-map<string, ANIMATION *>::iterator it;
 
 using namespace std;
 using namespace sf;
@@ -27,7 +26,6 @@ Verde    : Atrapa la pelota
 Naranja  : Hace que la pelota vaya más lenta
 */
 vector<ENTIDAD *> ENTIDADES;
-//vector<ENTIDAD *>::iterator enty;  //. Usar Iterador automativo auto_ptr
 
 #define maxRange 100000 // es 10.1234
 #define minRange  20000 // es  2.1234
@@ -39,10 +37,10 @@ float frand(){
 
 /******** ENUMERACION DE LOS BONOS **************/
 enum Bonus { Laser, Enlarge, Slow, Catch, Warp, Duplex, Temp, Ball3, \
-             PowerUp, Resizer, Inflate, Magic, Globe, Restore, TopDoor};
+             PowerUp, Resizer, Inflate, Magic, FireBall, Globe, Restore, TopDoor};
 
 
-map<Bonus, string> Names = {
+map<Bonus, string> NameBonus = {
    { Bonus::Laser,   "Laser" },
    { Bonus::Enlarge, "Enlarge" },
    { Bonus::Slow,    "Slow" },
@@ -55,6 +53,7 @@ map<Bonus, string> Names = {
    { Bonus::Resizer, "Resizer" },
    { Bonus::Inflate, "Inflate" },
    { Bonus::Magic,   "Magic" },
+   { Bonus::FireBall,"FireBall"},
    { Bonus::Globe,   "Globe" },
    { Bonus::Restore, "Restore" },
    { Bonus::TopDoor, "TopDoor" },
@@ -65,7 +64,7 @@ enum Enemy { Cone, Triangle, GlobeGreen, ExpGreen, GlobeRed, ExpRed, GlobeCyan, 
              ExpCyan, Cube, Sphere, GlobeMix, Orbit, Storm, Arco, Saturn, Magnet, \
              Ruby, Atom};
 
-map<Enemy, string> Enemies = {
+map<Enemy, string> NameEnemy = {
    { Enemy::Cone,       "Cone" },
    { Enemy::Triangle,   "Triangle" },
    { Enemy::GlobeGreen, "GlobeGreen" },
@@ -93,7 +92,35 @@ map<Efecto, string> NameEfecto = {
    { Efecto::Explosion, "Explosion" },
 };
 
+/******* Cache de Efectos y Balas *****************/
+//. Win7 and XP, Buggs in table asignacion, no se pueden crear objetos
+//. Dentro del mismo ciclo de la tabla ENTIDADES
 
+struct Chispas {
+   Vector2f   posicion;
+   Efecto     tipo;
+
+   Chispas() {}
+   Chispas(Vector2f posicion, Efecto tipo){
+      this->posicion = posicion;
+      this->tipo = tipo;
+   }
+};
+//. Cache para acumular los Efectos.
+vector <Chispas> CHISPAS;
+
+vector <BOLA *> BOLAS;
+
+vector <LASER*> BULLETS;
+#define MAXBULLETS   32
+
+/******* Creacion de las BALAS desde el Player ****/
+void Create_Bullets(float px, float py, Image *image){
+   if(BULLETS.size() > MAXBULLETS){ return; }
+   LASER *bullet = new LASER(px, py, 5,13, colorSelect);
+   bullet->SetImagen(image);
+   BULLETS.push_back(bullet);
+}
 
 //. Un contenedor de Bloques de 10 filas y 13 Columnas
 BLOCK **Create_Blocks(int FILAS, int COLMS, int sx, int sy){
@@ -212,62 +239,152 @@ Text Create_Label(float px, float py, string texto, Font *font, float Scale){
 }
 
 
+//. *** COMANDOS GLOBALES (afecto Player y Bola) ***
+void Command_Bonus(int iTipo, PLAYER *player, vector<BOLA*>*balls){
 
+   cout << "Command Bonus: " << NameBonus.at((Bonus)iTipo) << endl;
 
-//. *** COMANDOS GLOBALES (Pendientes) ***
+   player->setCaptura( false );
 
+   switch ((Bonus)iTipo) {
+   case Bonus::Restore:
+      player->ChangeImage(PLAYER::TIPO::Normal);
+      break;
+   case Bonus::Enlarge:
+      player->ChangeImage(PLAYER::TIPO::Big);
+      break;
+   case Bonus::Resizer:
+      player->ChangeImage(PLAYER::TIPO::Small);
+      break;
+   case Bonus::Inflate:
+      player->SetInflate( true );
+      break;
+   case Bonus::Temp:
+      player->SetInflate( false );
+      break;
+   case Bonus::Catch:
+      player->setCaptura( true );
+      break;
+   case Bonus::Laser:
+      player->ChangeImage(PLAYER::TIPO::Canon);
+      break;
+   case Bonus::Duplex:
+      if(player->get_idImage() == PLAYER::TIPO::Normal){
+         player->ChangeImage(PLAYER::TIPO::DuplexNormal);
+      }
+      if(player->get_idImage() == PLAYER::TIPO::Small){
+         player->ChangeImage(PLAYER::TIPO::DuplexSmall);
+      }
+      if(player->get_idImage() == PLAYER::TIPO::Mini){
+         player->ChangeImage(PLAYER::TIPO::DuplexMini);
+      }
+      if(player->get_idImage() == PLAYER::TIPO::Big){
+         player->ChangeImage(PLAYER::TIPO::DuplexBig);
+      }
+      break;
 
-//. Crea 2 Cañones de Balas.-
-void Command_Canons(void *data){
-   PLAYER *player = (PLAYER*)data;
-   cout << "Bonus Canons: player(" << player->px << "," << player->py << ")" << endl;
+   case Bonus::PowerUp:
+      player->add_Lifes(1);
+      break;
+
+   case Bonus::Magic:
+      for(auto enty = ENTIDADES.begin(); enty!=ENTIDADES.end(); ++enty){
+         ENTIDAD *cosa = (ENTIDAD*)*enty;
+         if(cosa->get_idGrupo() == ENTIDAD::GRUPO::Enemy){
+            cosa->SetFinished( true );
+            CHISPAS.push_back(Chispas(cosa->getPosition(), Efecto::Colision));
+         }
+      }
+      player->add_Lifes(5);
+      break;
+
+   case Bonus::Slow:
+      break;
+
+   case Bonus::Warp:
+      player->add_Lifes(3);
+      OpenLevel = true;
+      break;
+
+   case Bonus::Ball3:
+      for(int index=0; index < 3; index++){
+         BOLA *bbb = new BOLA( balls->at(0) );
+         bbb->Update();
+         bbb->reboteDown();
+         balls->push_back(bbb);
+      }
+      break;
+
+   case Bonus::FireBall:
+      for(auto bb=balls->begin(); bb!=balls->end(); ++bb){
+         BOLA *bola = (BOLA*)*bb;
+         bola->ChangeImage(BOLA::TIPO::Fuego);
+      }
+      break;
+
+   case Bonus::Globe:
+      for(auto bb=balls->begin(); bb!=balls->end(); ++bb){
+         BOLA *bola = (BOLA*)*bb;
+         bola->ChangeImage(BOLA::TIPO::Plasma);
+      }
+      break;
+
+   case Bonus::TopDoor:
+      break;
+   }
 }
-//. Abre las Compuertas para pasar de Nivel
-void Command_Puertas(void *data){
-   cout << " Bonus Compuertas" << endl;
+
+void Command_Enemy(int iTipo, PLAYER *rcPlayer, vector<ENTIDAD*>*entity){
+
+   cout << "Comandos de Enemigos: " << NameEnemy.at((Enemy)iTipo) << endl;
+
+   switch((Enemy)iTipo){
+   case Enemy::Cone:
+      break;
+   case Enemy::Triangle:
+      break;
+   case Enemy::GlobeGreen:
+      break;
+   case Enemy::ExpGreen:
+      break;
+   case Enemy::GlobeRed:
+      break;
+   case Enemy::ExpRed:
+      break;
+   case Enemy::GlobeCyan:
+      break;
+   case Enemy::ExpCyan:
+      break;
+   case Enemy::Cube:
+      break;
+   case Enemy::Sphere:
+      break;
+   case Enemy::GlobeMix:
+      break;
+   case Enemy::Orbit:
+      break;
+   case Enemy::Storm:
+      break;
+   case Enemy::Arco:
+      break;
+   case Enemy::Saturn:
+      break;
+   case Enemy::Magnet:
+      break;
+   case Enemy::Ruby:
+      break;
+   case Enemy::Atom:
+      break;
+   }
 }
 
-//. Multiplica las Bolas x 3
-void Command_Bolas_x3(void *data){
-   cout << "Bonus 3 Bolas extras" << endl;
-}
 
-void Command_Vida_Extra(void *data){
-   cout << "Bonus Vida Extra" << endl;
-}
-
-void Command_Atrapar_Bola(void *data){
-   cout << "Bonus Atrapar Bola" << endl;
-}
-
-void Command_Bola_Lenta(void *data){
-   cout << "Bonus Bola Lenta" << endl;
-}
-
-void Command_Encoger_Tambor(void *data){
-   cout << "Encoger Tambor Player" << endl;
-}
-
-void Command_Generar_Tornado(void *data){
-   cout << "Generar Tornado" << endl;
-}
-
-void Create_Canons(Image *imagen, float px, float py){
-    ANIMATION *vtmO = new ANIMATION(imagen, IntRect(0, 192, 32, 112), 7, 1);
-    vtmO->setElapsed(0.5f);
-
-    BONUS *bonus = new BONUS(px, py, vtmO);
-
-    bonus->SetVelocity(0, frand(), ENTIDAD::GRUPO::Bonus);
-    bonus->SetCommand( &Command_Canons);
-    ENTIDADES.push_back(bonus);
-}
 
 
 //. *** INSTANCIAR BONUS ***
 void MakeBonus(float px, float py, Bonus tipo){
 
-   string keyName = Names.at(tipo);
+   string keyName = NameBonus.at(tipo);
    cout << "Bonus: " << keyName << endl;
 
    ANIMATION *anim = NULL;
@@ -281,7 +398,7 @@ void MakeBonus(float px, float py, Bonus tipo){
    }
    BONUS *bonus = new BONUS(px, py, anim);
    bonus->SetVelocity(0, frand(), ENTIDAD::GRUPO::Bonus);
-   bonus->SetCommand( &Command_Canons );
+   bonus->set_BonusTipo(tipo);
    ENTIDADES.push_back(bonus);
 }
 //. Overload
@@ -293,7 +410,7 @@ void MakeBonus(Vector2f pos, Bonus tipo){
 //. *** INSTANCIAR ENEMIGOS ***
 ENEMY *MakeEnemy(float px, float py, Enemy tipo){
    //. Ya es comprobado que estan todas las claves.-
-   string keyName = Enemies.at(tipo);
+   string keyName = NameEnemy.at(tipo);
    cout << "Enemies: " << keyName << " : " << tipo << endl;
 
    //. No debiera fallar, si encuentra todas las palabras clave.-
@@ -309,7 +426,7 @@ ENEMY *MakeEnemy(float px, float py, Enemy tipo){
 
    ENEMY *enemy = new ENEMY(px, py, anim);
    enemy->SetVelocity(0,0, ENTIDAD::GRUPO::Enemy);
-   enemy->SetCommand( &Command_Canons );
+   enemy->set_EnemyTipo(tipo);
    ENTIDADES.push_back(enemy);
 
    //. para cargar los Rectangulos de Colision Principales
@@ -363,6 +480,38 @@ void Load_Fondos(Image *image, int filas, int colms, int patron = 64){
          index++;
       }
    }
+
+   data[0] = DATA(0, (Color)0);
+   data[1] = DATA(1, Color(240,240,240));
+   data[1].SetImagen(image, IntRect(256,368, 32,16), 40, 0); // White 50pts
+
+   data[2] = DATA(2, Color(181,181,181));
+   data[2].SetImagen(image, IntRect(224,368, 32,16), 50, 0); // Silver 50pts
+
+   data[3] = DATA(3, Color(252,116,96));
+   data[3].SetImagen(image, IntRect(224,336, 32,16), 60, 0); // Orange 60pts
+
+   data[4] = DATA(4, Color(60,188,252));
+   data[4].SetImagen(image, IntRect(256,320, 32,16), 70, 0); // Cyan   70pts
+
+   data[5] = DATA(5, Color(128,208,16));
+   data[5].SetImagen(image, IntRect(224,320, 32,16), 80, 0); // Green 80pts
+
+   data[6] = DATA(6, Color(216,40,0));
+   data[6].SetImagen(image, IntRect(224,352, 32,16), 90, 1); // Red  90pts 1 Golpe
+
+   data[7] = DATA(7, Color(0,112,236));
+   data[7].SetImagen(image, IntRect(224,304, 32,26), 100, 2); // Blue 100pts 2 Golpes
+
+   data[8] = DATA(8, Color(252,116,180));
+   data[8].SetImagen(image, IntRect(256,336, 32,16), 110, 3); // Pink 110pts 3 Golpes
+
+   data[9] = DATA(9, Color(252,152,56));
+   data[9].SetImagen(image, IntRect(256,352, 32,16), 120, 4); // Yellow 120pts 4 Golpes
+
+   data[10] = DATA(10, Color(240,188,60));
+   data[10].SetImagen(image, IntRect(256,304, 32,16), 130, 5); // Gold 130pts 5 Golpes
+
 }
 
 
@@ -759,21 +908,19 @@ void Load_Efectos(Image *efecto){
 
 }
 
-//. Win7 and XP, Buggs in table asignacion, no se pueden crear objetos
-//. Dentro del mismo ciclo de la tabla ENTIDADES
 
-struct Chispas {
-   Vector2f   posicion;
-   Efecto     tipo;
+void UpdateScore(Text *puntos, int Puntaje){
+   ostringstream buffer;
+   buffer << "Puntos: " << setfill('0') << setw(6) << Puntaje;
+   puntos->setString(string(buffer.str()));
+}
 
-   Chispas() {}
-   Chispas(Vector2f posicion, Efecto tipo){
-      this->posicion = posicion;
-      this->tipo = tipo;
-   }
-};
-//. Cache para acumular los Efectos.
-vector <Chispas> CHISPAS;
+void UpdateLifes(Text *Lifes, int vidas){
+   ostringstream buffer;
+   buffer << "Vidas.: " << setfill('0') << setw(2) << vidas;
+   Lifes->setString(string(buffer.str()));
+}
+
 
 int main()
 {
@@ -781,6 +928,18 @@ int main()
     //. Solo a 60 cuadros x Segundos
     srand(time(0)); //. Activa el sed random
     win.setFramerateLimit(60);
+
+    #ifdef RELEASED
+     Time  delta;
+     int   nivel = 0;
+     float tiempo  = 20.0f;
+     float retardo =  0.0f;
+     int   LIFES   = 0;
+     int   SCORE   = 0;
+
+     delta = seconds(0.1f);
+     retardo = delta.asSeconds() + tiempo;
+    #endif // RELEASED
 
     //. Rectangulo  de Juego
     RectangleShape rcGame = Create_Rectangle(4,4, 550, 470, colorBorde);
@@ -800,8 +959,10 @@ int main()
     PUERTA *rcDoor_R = new PUERTA(527, 420, 16,32, colorDoors, (Color)0 );
 
 
-    BOLA *rcBola = new BOLA(250, 398, 16,16, Color( 90, 90,255));
+    //BOLA *rcBola = new BOLA(250, 398, 16,16, Color( 90, 90,255));
+    BOLA *myBola = new BOLA(250, 420, 16,16, Color(90,90,255));
     PLAYER *rcPlayer = new PLAYER(250, 420, 64, 20, colorPlayer);
+    BOLAS.push_back(myBola);
 
     Font font;
     if( !font.loadFromFile("./acme.ttf")){
@@ -824,9 +985,9 @@ int main()
     RectangleShape rcMenu = Create_Rectangle(560,   4, 234, 470, colorBorde);
 
     //.Requiere la direccion de la fuente, para no copiarla.
-    Text titulo = Create_Label(600, 10, "Arkanoid.-", &font, 30);
-    Text puntos = Create_Label(600, 60, "Puntos: 000000", &font, 20);
-    Text vidas = Create_Label(600, 90, "Vidas ..: 00", &font, 20);
+    Text titulo   = Create_Label(600, 10, "Arkanoid.-", &font, 30);
+    Text labScore = Create_Label(600, 60, "Puntos: 000000", &font, 20);
+    Text labLifes = Create_Label(600, 90, "Vidas ..: 00", &font, 20);
 
     //. Lectura de los Fondos y Bordes.
     Image fondos;
@@ -837,8 +998,12 @@ int main()
     Load_Bordes(&fondos);
     CambiarFondo(&rcGame, 0);
 
+    myBola->SetImagenes(&fondos);
+    myBola->ChangeImage(BOLA::TIPO::Normal);
+
     rcPlayer->SetImagenes(&fondos);
     rcPlayer->ChangeImage(PLAYER::TIPO::Normal);
+    UpdateLifes( &labLifes, rcPlayer->get_Lifes() );
 
 
     Image puertas;
@@ -877,6 +1042,12 @@ int main()
     }
     Load_Efectos(&effect);
 
+    #ifdef RELEASED
+    editor->loadFromFile();
+    editor->CopyFromArray(nivel, block, TOTAL);
+    level[nivel]->Set_Pressed();
+    #endif // RELEASED
+
 
 
     while(win.isOpen()){
@@ -900,6 +1071,13 @@ int main()
                rcDoor_L->setModo(PUERTA::MODO::Cerrando);
                rcDoor_R->setModo(PUERTA::MODO::Cerrando);
             }
+         }
+
+         if(Keyboard::isKeyPressed(Keyboard::F5)){
+            BOLA *bbb = new BOLA( myBola );
+            bbb->Update();
+            bbb->reboteDown();
+            BOLAS.push_back(bbb);
          }
 
          //. Activar Modo-Editar
@@ -942,16 +1120,22 @@ int main()
       win.draw(rcMenu);
 
       win.draw(titulo);
-      win.draw(puntos);
-      win.draw(vidas);
 
-      win.draw(rcLeft);
-      win.draw(rcRight);
-      win.draw(rcTop);
-      win.draw(rcDown);
-
-      //win.draw(rcDoor_L);
-      //win.draw(rcDoor_R);
+      #ifdef RELEASED
+         if(SCORE != rcPlayer->get_Score()){
+            UpdateScore(&labScore, rcPlayer->get_Score());
+         }
+         if(LIFES != rcPlayer->get_Lifes()){
+            UpdateLifes(&labLifes, rcPlayer->get_Lifes());
+         }
+      #else
+         win.draw(rcLeft);
+         win.draw(rcRight);
+         win.draw(rcTop);
+         win.draw(rcDown);
+      #endif // RELEASED
+      win.draw(labScore);
+      win.draw(labLifes);
 
       rcDoor_L->Display(&win);
       rcDoor_R->Display(&win);
@@ -963,91 +1147,159 @@ int main()
 
       } else {
          //. Modo Normal de Juego
-         rcBola->Update();
-
-         if(isCollision(rcBola->getRectangle(), rcLeft, &force)){
-            cout << "Colision left: " << force << endl;
-            rcBola->reboteLeft();
-         }
-
-         if(isCollision(rcBola->getRectangle(), rcRight, &force)){
-            cout << "Colision right: " << force << endl;
-            rcBola->reboteRight();
-         }
-
-         if(isCollision(rcBola->getRectangle(), rcTop, &force)){
-            cout << "Colision top: " << force << endl;
-            rcBola->reboteTop();
-         }
-
-         if(isCollision(rcBola->getRectangle(), rcDown, &force)){
-            cout << "Colision Down - Bola perdida" << force << endl;
-            rcBola->reboteDown();
-         }
-
          rcPlayer->Update();
-         rcPlayer->Display(&win);
-         if(isCollision(rcBola->getRectangle(), rcPlayer->getRectangle(), &force) || \
-            rcPlayer->isInflatedCollision(rcBola->getRectangle())){
 
-            if(force == CForce::forceLeft) { rcBola->reboteLeft(); }
-            if(force == CForce::forceRight) { rcBola->reboteRight(); }
-            rcBola->reboteDown();
+         for(auto bb=BOLAS.begin(); bb!=BOLAS.end(); ++bb){
+            BOLA *rcBola = (BOLA*)*bb;
+            if( !rcBola->isActiva() ){
+               rcBola->setPosition(rcPlayer->px, rcPlayer->py -12);
+            }
+            rcBola->Update();
 
-            Puntaje +=1;
-            cout << "Acierto del Player: " << Puntaje << endl;
+            if(isCollision(rcBola->getRectangle(), rcLeft, &force)){
+               rcBola->reboteLeft();
+            }
+            if(isCollision(rcBola->getRectangle(), rcRight, &force)){
+               rcBola->reboteRight();
+            }
+            if(isCollision(rcBola->getRectangle(), rcTop, &force)){
+               rcBola->reboteTop();
+            }
+            if(isCollision(rcBola->getRectangle(), rcDown, &force)){
+               rcBola->reboteDown();
+               //. Elimina las BOLAS, pero dejara 1 sola
+               if(BOLAS.size() > 1){
+                  cout << "Bola Perdida: " << BOLAS.size() << endl;
+                  BOLAS.erase(bb);
+                  advance(bb, -1);
+                  continue;
+               } else {
+                  //. Pierde Vidas cuando hay 1 sola BOLA
+                  rcPlayer->add_Lifes(-1);
+               }
+            }
 
-            ostringstream buffer;
-            buffer << "Puntos: " << setfill('0') << setw(6) << Puntaje;
-            puntos.setString(string(buffer.str()));
+            if(rcPlayer->isInflatedCollision(rcBola->getRectangle())){
+               if(rcPlayer->isCaptured()){
+                  rcBola->setActiva( false );
+                  StartGame = false;
+               } else {
+                  rcBola->reboteDown( rcPlayer->get_Diffx() );
+                  if(StartGame){
+                     rcPlayer->add_Score( 1 );
+                     //. Solo 1 punto por tocar la bola.
+                  }
+               }
+            } //. Colisionador con la (Bola/Player)
+            rcBola->Display(&win);
          }
-         rcBola->Display(&win);
-
+         rcPlayer->Display(&win);
       }  //. end Modo-Editar.-
 
 
 
       //. Desplegar los bloques
       //. Aprovechar el Mismo cyclo para Dibujar los Botones de los Niveles
-      int indice = 0;
+      int indice  = 0;
+      int activos = 0;
+
+      CHISPAS.clear();    //. Limpia el Cache de Chispas.-
 
       for(int index = 0; index < TOTAL; index++){
         if(indice < LEVELS){
           level[indice]->Display(&win);
           indice++;
         }
-        if( !block[index]->isActivo()) { continue; }
-        //. Colision con los Bloques
-        if(isCollision(rcBola->getRectangle(), block[index]->getRectangle(), &force)){
-           if(force == CForce::forceLeft ) { rcBola->reboteLeft(); }
-           if(force == CForce::forceRight) { rcBola->reboteRight(); }
-           if(force == CForce::forceTop)   { rcBola->reboteTop(); }
-           if(force == CForce::forceDown)  { rcBola->reboteDown(); }
-           block[index]->setActivo(false);
-
-           //. La probabilidad es de 1 a 10, para Bonos
-           if( !(rand() % 3) ){
-               int iTipo = rand() % (int)Bonus::TopDoor;
-               MakeBonus(rcBola->getPosition(),(Bonus)iTipo);
-           }
-
-           //. Probabilidad de 5 para Enemigo a trabajar
-           if( !(rand() % 2) ){
-              int iTipo = rand() & (int)Enemy::Atom;
-              //. Podria aparecer no necesariamente en la posicion de la Bola
-              //. porque puede entrar desde las compuertas de arriba.-
-              ENEMY *enemy = NULL;
-              enemy = MakeEnemy(rcBola->getPosition(), (Enemy)iTipo);
-              enemy->SetColliders(rcTop, rcDown, rcLeft, rcRight);
-           }
-           continue;
+        #ifdef RELEASED
+        if( !ModoEditar ){
+          if(!block[index]->get_idColor() ) { continue; }
         }
+        #endif // RELEASED
+
+        if( !block[index]->isActivo()) { continue; }
+
+        //. Collisiones de los Lasers
+        for(auto bala=BULLETS.begin(); bala!=BULLETS.end(); ++bala){
+           LASER *laser = (LASER*)*bala;
+           if(laser->isFinished()){ continue; }
+           if(isCollision(laser->getRectangle(), block[index]->getRectangle(), &force)){
+              laser->setFinished(true);
+              block[index]->setActivo(false);
+              CHISPAS.push_back(Chispas(laser->getPosition(), Efecto::Colision));
+           }
+        }
+
+        //. Colision con los Bloques
+        bool Seguir = false;
+        for(auto bb=BOLAS.begin(); bb!=BOLAS.end(); ++bb){
+           BOLA *rcBola = (BOLA*)*bb;
+
+           if(isCollision(rcBola->getRectangle(), block[index]->getRectangle(), &force)){
+              if(rcBola->get_idTipo() != BOLA::TIPO::Fuego){
+                if(force == CForce::forceLeft ) { rcBola->reboteLeft(); }
+                if(force == CForce::forceRight) { rcBola->reboteRight(); }
+                if(force == CForce::forceTop)   { rcBola->reboteTop(); }
+                if(force == CForce::forceDown)  { rcBola->reboteDown(); }
+              }
+              #ifdef RELEASED
+              if(block[index]->get_Golpes() > 0) { Seguir = true; break; }
+              rcPlayer->add_Score( block[index]->get_Scores() );
+              #endif // RELEASED
+
+              block[index]->setActivo(false);
+
+              //. La probabilidad es de 1 a 10, para Bonos
+              if( !(rand() % 5) ){
+                  int iTipo = rand() % (int)Bonus::TopDoor;
+                  MakeBonus(rcBola->getPosition(),(Bonus)iTipo);
+              }
+
+              //. Probabilidad de 5 para Enemigo a trabajar
+              if( !(rand() % 8) ){
+                 int iTipo = rand() & (int)Enemy::Atom;
+                 //. Podria aparecer no necesariamente en la posicion de la Bola
+                 //. porque puede entrar desde las compuertas de arriba.-
+                 ENEMY *enemy = NULL;
+                 enemy = MakeEnemy(rcBola->getPosition(), (Enemy)iTipo);
+                 enemy->SetColliders(rcTop, rcDown, rcLeft, rcRight);
+              }
+           }
+        }
+        if(Seguir){ continue; }
         block[index]->Display(&win);
+        activos++;
       }
+      #ifdef RELEASED
+      if(!activos || OpenLevel){
+         StartGame = false;
+         if(rcDoor_L->getModo() == PUERTA::MODO::Cerrada){
+            rcDoor_L->setModo(PUERTA::MODO::Abriendo);
+            rcDoor_R->setModo(PUERTA::MODO::Abriendo);
+         }
+         retardo -= delta.asSeconds();
+         if(retardo < 0.0f){
+            OpenLevel = false;
+            retardo = delta.asSeconds() + tiempo;
+
+            ENTIDADES.clear();
+            CambiarFondo(&rcGame, rand() % 40);
+
+            level[nivel]->Set_Select();
+            nivel++;
+            level[nivel]->Set_Pressed();
+
+            editor->CopyFromArray(nivel, block, TOTAL);
+            rcDoor_L->setModo(PUERTA::MODO::Cerrando);
+            rcDoor_R->setModo(PUERTA::MODO::Cerrando);
+            rcPlayer->ReStart();
+            BOLAS.at(0)->ReStart();
+         }
+      }
+      #endif // RELEASED
+
+
 
       //. Despliega la tabla de ENTIDADES
-
-      CHISPAS.clear();    //. Limpia el Cache de Chispas.-
 
       for(auto enty = ENTIDADES.begin(); enty != ENTIDADES.end(); ++enty){
          //((ENTIDAD*)*enty)->Update();
@@ -1069,7 +1321,14 @@ int main()
          //. Si el Bono / Enemigo Colisiona al Player
          if(cosa->get_idGrupo() != ENTIDAD::GRUPO::Efecto){
             if(rcPlayer->isInflatedCollision(cosa->GetCollider())){
-               cosa->On_Command(rcPlayer);     /**< Ejecuta el Comando de Este Bono */
+               /**< Ejecuta el Comando de Este Bono */
+               if(cosa->get_idGrupo() == ENTIDAD::GRUPO::Bonus){
+                  Command_Bonus(((BONUS*)cosa)->get_BonusTipo(), rcPlayer, &BOLAS);
+               }
+
+               if(cosa->get_idGrupo() == ENTIDAD::GRUPO::Enemy){
+                 Command_Enemy(((ENEMY*)cosa)->get_EnemyTipo(), rcPlayer, &ENTIDADES);
+               }
 
                //. Si el player es Golpeado por alguna cosa
                //. Agrega los efectos en el Cache de Chispas
@@ -1088,12 +1347,18 @@ int main()
                CHISPAS.push_back(Chispas(cosa->getPosition(), Efecto::Explosion));
 
             } else {
-
-               if(enemy->isGolpeado(rcBola->getRectangle() )){
-                  rcBola->Golpeada();
-                  enemy->Golpeado();
-                  //. Agrega los efectos en el Cache de Chispas
-                  CHISPAS.push_back(Chispas(cosa->getPosition(), Efecto::Explosion));
+               for(auto bb=BOLAS.begin(); bb!=BOLAS.end(); ++bb){
+                  BOLA *rcBola = (BOLA*)*bb;
+                  if(enemy->isGolpeado(rcBola->getRectangle() )){
+                     enemy->Golpeado();
+                     if(rcBola->get_idTipo() == BOLA::TIPO::Plasma){
+                        enemy->SetFinished(true);
+                     } else {
+                        rcBola->Golpeada();
+                     }
+                     //. Agrega los efectos en el Cache de Chispas
+                     CHISPAS.push_back(Chispas(cosa->getPosition(), Efecto::Explosion));
+                  }
                }
             }
             continue;
@@ -1112,11 +1377,18 @@ int main()
          MakeEfecto(dta->posicion, dta->tipo);
       }
 
+      //. Actualizar las BULLETS
+      for(auto bala=BULLETS.begin(); bala!=BULLETS.end(); ++bala){
+         LASER *laser = (LASER*)*bala;
+         if(laser->isFinished()){
+            bala = BULLETS.erase(bala);
+            if(bala == BULLETS.end())    { break; }
+            if(bala != BULLETS.begin()) { advance(bala, -1); }
+         }
+         laser->Update();
+         laser->Display(&win);
+      }
 
-      //. Desplieque de Animaciones
-      //for( it = TABLA.begin(); it != TABLA.end(); ++it){
-      //   ((ANIMATION*)it->second)->Display(&win);
-      //}
       win.display();
 
     }

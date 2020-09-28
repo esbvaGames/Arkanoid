@@ -1,12 +1,24 @@
 #ifndef _PLAYER_H
 #define _PLAYER_H
 
+#include <math.h>
 using namespace sf;
+
+#define TIMER_FUEGO   250
+#define TIMER_PLASMA  500
 
 //. Control de la BOLA
 struct BOLA {
+   enum TIPO { Normal, Mini, Fuego, Plasma};
 
    BOLA() {}
+
+   BOLA(const BOLA *Other){   //. Llamado como:  new BOLA( *other )
+      *this = *Other;
+   }
+   BOLA(const BOLA &Other){   //. Llamado como:  new BOLA(  other )
+      *this = Other;
+   }
 
    BOLA(float px, float py, float width, float height, Color myColor){
       rcBola = Create_Rectangle(px, py, width, height, myColor);
@@ -19,22 +31,53 @@ struct BOLA {
       if( !StartGame) { return; }
       if( !Activa ){
          Activa = true;
-         vx =  frand();
+         vx =  frand() - frand();
          vy = -frand();
       }
       px += vx;
       py += vy;
       rcBola.setPosition(px, py);
+
+      animFuego->setPosition(px, py);
+      animPlasma->setPosition(px, py);
+
+      if(tipo == TIPO::Fuego){
+         timerFuego -= 1;
+         if(timerFuego < 0){ ChangeImage(TIPO::Normal); }
+      }
+      if(tipo == TIPO::Plasma){
+         timerPlasma -=1;
+         if(timerPlasma < 0){ ChangeImage(TIPO::Normal); }
+      }
+
    }
 
-   void reboteLeft()  { vx =  frand(); vy = frand() -frand(); }
-   void reboteRight() { vx = -frand(); vy = frand() -frand(); }
-   void reboteTop()   { vy =  frand(); vx = frand() -frand(); }
-   void reboteDown()  { vy = -frand(); vx = frand() -frand(); }
+   void reboteLeft()  {
+      vx =  frand();
+      vy =((fabs(vy) < 1.0f) ? frand() -frand() : vy);
+   }
+   void reboteRight() {
+      vx = -frand();
+      vy =((fabs(vy) < 1.0f) ? frand() -frand() : vy);
+   }
 
+   void reboteTop() {
+       vy =  frand();
+       vx = ((fabs(vx) < 0.0f) ? vx : frand() -frand());
+   }
+   void reboteDown(float diffx = 0.0f){
+      vy = -frand();
+      vx = ((diffx != 0.0f) ? diffx : frand() -frand());
+   }
 
    void Display(RenderWindow *win){
-      win->draw(rcBola);
+
+      switch(tipo){
+      case TIPO::Fuego:       animFuego->Display(win); break;
+      case TIPO::Plasma:      animPlasma->Display(win); break;
+      default:
+         win->draw(rcBola);
+      }
    }
 
    RectangleShape getRectangle(){
@@ -45,27 +88,149 @@ struct BOLA {
       return Vector2f(px, py);
    }
 
+   void setPosition(float px, float py){
+      this->px = px;  vx = 0;
+      this->py = py;  vy = 0;
+      rcBola.setPosition(px, py);
+      animFuego->setPosition(px, py);
+      animPlasma->setPosition(px, py);
+   }
+
+
+   bool isActiva() { return Activa; }
+   void setActiva(bool state) { Activa = state; }
+
    void Golpeada(){
       vx = frand() - frand();
       vy = frand() - frand();
    }
 
-//. Proteccion de datos, solo da acceso a clases heredadas,
-//. esta aca, solo porque el editor me muestra un color distinto de las funciones
-//. jajajaa.
+   void SetImagenes(Image *image){
+      Color NegroAplpha = Color(0,0,0, 0);
+
+      ball_Normal.create(10,10, NegroAplpha);
+      ball_Normal.copy(*image, 0,0, IntRect(435,275, 10,10), true);
+
+      ball_Mini.create(6,6, NegroAplpha);
+      ball_Mini.copy(*image, 0,0, IntRect(453,277, 6,6), true);
+
+      animFuego = new ANIMATION(image, IntRect(464,272,20,10), 1,2);
+      animPlasma = new ANIMATION(image, IntRect(496, 269, 80,20), 1,4);
+
+
+   }
+
+   void ChangeImage(TIPO tipo){
+      this->tipo = tipo;
+
+      Texture *mmm = new Texture();
+
+      switch(tipo){
+      case TIPO::Fuego:
+      case TIPO::Plasma:
+      case TIPO::Normal:  mmm->loadFromImage(ball_Normal); break;
+      case TIPO::Mini:    mmm->loadFromImage(ball_Mini);   break;
+      }
+
+      rcBola.setFillColor(Color(255,255,255, 255));
+      rcBola.setOutlineColor(colorSelect);
+      rcBola.setOutlineThickness( 1 );
+      rcBola.setOrigin( mmm->getSize().x / 2.0f, mmm->getSize().y / 2.0f);
+      rcBola.setSize(Vector2f(mmm->getSize().x, mmm->getSize().y));
+      rcBola.setTexture(mmm, true);
+      rcBola.setPosition(px, py);
+
+      timerFuego = TIMER_FUEGO;
+      timerPlasma = TIMER_PLASMA;
+   }
+
+
+   TIPO get_idTipo() { return tipo; }
+
+   void ReStart(){
+      px = 250;
+      py = 410;
+      ChangeImage(TIPO::Normal);
+      Activa    = false;
+      StartGame = false;
+   }
+
+
 protected:
    float Activa = false;
    float px, py, vx, vy;   //. Velocidad en x,y
    RectangleShape rcBola;
 
+   TIPO           tipo = TIPO::Normal;
+   Image          ball_Normal;
+   Image          ball_Mini;
+   ANIMATION      *animFuego;
+   ANIMATION      *animPlasma;
+
+private:
+   int timerFuego  = TIMER_FUEGO;
+   int timerPlasma = TIMER_PLASMA;
 };
+
+//. CONTROL DEL LASER
+
+struct LASER {
+   LASER() {}
+
+   LASER(float px, float py, float width, float height, Color myColor){
+      rcBullet = Create_Rectangle(px, py, width, height, myColor);
+      rcBullet.setOrigin(width / 2.0f, height / 2.0f);
+      rcBullet.setPosition(px, py);
+      rcBullet.setOutlineThickness( 0 );
+      this->px = px;
+      this->py = py;
+   }
+
+   void SetImagen(Image *image){
+      Texture *mmm = new Texture();
+      mmm->loadFromImage(*image);
+
+      rcBullet.setFillColor(Color(255,255,255, 255));
+      rcBullet.setTexture(mmm, true);
+   }
+
+   void Update(){
+      py -= 5;
+      rcBullet.setPosition(px, py);
+      if(py < 35){ finished = true; }
+   }
+
+   void Display(RenderWindow *win){
+      win->draw(rcBullet);
+   }
+
+   Vector2f getPosition() { return rcBullet.getPosition(); }
+
+   RectangleShape getRectangle() { return rcBullet; }
+
+   bool isFinished() { return finished; }
+   void setFinished(bool state){ finished = state; }
+
+
+protected:
+   bool                 finished = false;
+   float                px, py;
+   RectangleShape       rcBullet;
+
+};
+
+
+
 
 
 //. CONTROL DEL PLAYER
 struct PLAYER{
    float px, py;
    RectangleShape rcPlayer;
-   enum TIPO {Normal, Canon, Small, Mini, Big};
+   enum TIPO {Normal, Canon, Small, Mini, Big, \
+              DuplexNormal, DuplexSmall, DuplexMini, DuplexBig};
+
+   friend void Create_Bullets(float px, float py, Image *image);
 
    PLAYER() {}
 
@@ -78,46 +243,36 @@ struct PLAYER{
 
    void Update() {
       if(Keyboard::isKeyPressed(Keyboard::Space)){
-         StartGame = true;
+         if( !OpenLevel ){
+            StartGame = true;
+            OpenLevel = false;
+         }
       }
 
+      float mx = rcPlayer.getOrigin().x;
       //. Solo funciona con una tecla presionada una vez;
       if(Keyboard::isKeyPressed(Keyboard::A) && !Keyboard::isKeyPressed(Keyboard::D)){
-         px -= ((px > 76+1) ? 3 : 0);
+         px -= ((px > 42+mx) ? 4 : 0);
          rcPlayer.setPosition(px, py);
          //cout << "Left: " << px << endl;
       }
 
       if(Keyboard::isKeyPressed(Keyboard::D) && !Keyboard::isKeyPressed(Keyboard::A)){
-         px += ((px < 480+1) ? 3 : 0);
+         px += ((px < 516-mx) ? 4 : 0);
          rcPlayer.setPosition(px, py);
          //cout << "Right: " << px << endl;
       }
-      //. Configuracion de teclado Solo Pruebas
 
-      if(Keyboard::isKeyPressed(Keyboard::Num1)){
-         ChangeImage(TIPO::Normal);
-      }
-      if(Keyboard::isKeyPressed(Keyboard::Num2)){
-         ChangeImage(TIPO::Canon);
-      }
-      if(Keyboard::isKeyPressed(Keyboard::Num3)){
-         ChangeImage(TIPO::Small);
-      }
-      if(Keyboard::isKeyPressed(Keyboard::Num4)){
-         ChangeImage(TIPO::Mini);
-      }
-      if(Keyboard::isKeyPressed(Keyboard::Num5)){
-         ChangeImage(TIPO::Big);
-      }
-      if(Keyboard::isKeyPressed(Keyboard::Num6)){
-         finished = true;
-      }
-      if(Keyboard::isKeyPressed(Keyboard::Num7)){
-         SetInflate();
-         inflated = true;
-      }
+      if(Mouse::isButtonPressed(Mouse::Left) || Keyboard::isKeyPressed(Keyboard::Space)){
+         if(tipo != TIPO::Canon){ return; }
 
+         steps -= 0.95;
+         if(steps < 0.0f){
+            steps = STEPS;
+            Create_Bullets(px -(mx -5), py -12, &bullet);
+            Create_Bullets(px +(mx +5), py -12, &bullet);
+         }
+      }
 
       exp_Normal->setPosition(px, py);
       exp_Canon->setPosition(px, py);
@@ -126,36 +281,32 @@ struct PLAYER{
       exp_Big->setPosition(px, py);
    }
 
+   bool isFinished() { return finished; }
+   bool setFinished(bool state) { return finished = state; }
+
    void Display(RenderWindow *win){
       if(finished){
          if(exploted){
-            px = 250;
-            exploted = false;
-            finished = false;
-            rcPlayer.setPosition(px, py);
-            ChangeImage(TIPO::Normal);
-
-            exp_Normal->IndexReset( 0 );
-            exp_Canon->IndexReset( 0 );
-            exp_Small->IndexReset( 0 );
-            exp_Mini->IndexReset( 0 );
-            exp_Big->IndexReset( 0 );
-
+            ReStart();
          } else {
              switch(tipo){
              case TIPO::Normal:
+             case TIPO::DuplexNormal:
                exploted = exp_Normal->Display(win);
                break;
              case TIPO::Canon:
                exploted = exp_Canon->Display(win);
                break;
              case TIPO::Small:
+             case TIPO::DuplexSmall:
                exploted = exp_Small->Display(win);
                break;
              case TIPO::Mini:
+             case TIPO::DuplexMini:
                exploted = exp_Mini->Display(win);
                break;
              case TIPO::Big:
+             case TIPO::DuplexBig:
                exploted = exp_Big->Display(win);
                break;
              }
@@ -212,6 +363,9 @@ struct PLAYER{
                               rcPlayer.getSize().y);
 
       if(myPlayer.intersects(myOther)){
+         diffx = myOther.getPosition().x - px;
+         diffx = min(diffx,  2.5f);
+         diffx = max(diffx, -2.5f);
          return true;
       }
 
@@ -219,14 +373,13 @@ struct PLAYER{
          if(myOther.intersects(GetCollider( paddle_0)) || \
             myOther.intersects(GetCollider( paddle_1)) || \
             myOther.intersects(GetCollider( paddle_2))) {
-
             return true;
          }
       }
-
-
       return false;
    }
+
+   float get_Diffx() { return diffx; }
 
    RectangleShape getCollider(Sprite *paddle){
       RectangleShape shape;
@@ -255,7 +408,7 @@ struct PLAYER{
       pad_Canon.create(48, 20, NegroAlpha);
       pad_Canon.copy(*image, 0,0, IntRect(296, 308, 48,20), false);
 
-      pad_Small.create(32, 12);
+      pad_Small.create(32, 12, NegroAlpha);
       pad_Small.copy(*image, 0,0, IntRect(352, 308, 32,12), false);
 
       pad_Mini.create(20, 8);
@@ -263,6 +416,19 @@ struct PLAYER{
 
       pad_Big.create(56, 12, NegroAlpha);
       pad_Big.copy(*image, 0,0, IntRect(292, 356, 56,12), false);
+
+      //. PAD, Duplicados
+      Duplex_Normal.create(96,12, NegroAlpha);
+      Duplex_Normal.copy(*image, 0,0, IntRect(248,276,96,12), false);
+
+      Duplex_Small.create(64,12, NegroAlpha);
+      Duplex_Small.copy(*image, 0,0, IntRect(352,308,64,12), false);
+
+      Duplex_Mini.create(40, 8, NegroAlpha);
+      Duplex_Mini.copy(*image, 0,0, IntRect(496,292,40,8), false);
+
+      Duplex_Big.create(112,12, NegroAlpha);
+      Duplex_Big.copy(*image, 0,0, IntRect(292,356,112,12), false);
 
       exp_Normal = new ANIMATION(image, IntRect(296,292,192,12), 1,4);
       exp_Normal->setElapsed(0.75);
@@ -274,6 +440,9 @@ struct PLAYER{
       exp_Mini->setElapsed(0.75);
       exp_Big = new ANIMATION(image, IntRect(392,372,216,12), 1,4);
       exp_Big->setElapsed(0.75);
+
+      bullet.create(6,14, Color(0,0,0, 0));
+      bullet.copy(*image, 0,0, IntRect(425,272, 6,14), true);
    }
 
    void ChangeImage(TIPO tipo){
@@ -297,6 +466,23 @@ struct PLAYER{
       case TIPO::Big:
          mmm->loadFromImage(pad_Big);
          break;
+
+      case TIPO::DuplexNormal:
+         inflated = false;
+         mmm->loadFromImage(Duplex_Normal);
+         break;
+      case TIPO::DuplexSmall:
+         inflated = false;
+         mmm->loadFromImage(Duplex_Small);
+         break;
+      case TIPO::DuplexMini:
+         inflated = false;
+         mmm->loadFromImage(Duplex_Mini);
+         break;
+      case TIPO::DuplexBig:
+         inflated = false;
+         mmm->loadFromImage(Duplex_Big);
+         break;
       }
 
       rcPlayer.setSize( Vector2f(mmm->getSize().x, mmm->getSize().y));
@@ -304,10 +490,23 @@ struct PLAYER{
       rcPlayer.setOutlineThickness( 1 );
       rcPlayer.setFillColor(Color(255,255,255, 255));
       rcPlayer.setTexture(mmm, true);
+
+      if(inflated){
+         SetInflate( true );
+      }
    }
 
-   void SetInflate() {
-      Texture *mmm = (Texture*) rcPlayer.getTexture();
+   TIPO get_idImage() { return tipo; }
+
+   void SetInflate( bool inflated ) {
+      this->inflated = inflated;
+
+      Texture *mmm = new Texture();
+      if(tipo == TIPO::Canon){
+         mmm->loadFromImage(pad_Normal);
+      } else {
+         mmm = (Texture *) rcPlayer.getTexture();
+      }
 
       float width  = mmm->getSize().x / 2.0f;
       float height = mmm->getSize().y / 2.0f;
@@ -329,10 +528,32 @@ struct PLAYER{
 
    }
 
+   void ReStart() {
+      px = 250;
+      exploted = false;
+      finished = false;
+      rcPlayer.setPosition(px, py);
+      ChangeImage(TIPO::Normal);
 
+      exp_Normal->IndexReset( 0 );
+      exp_Canon->IndexReset( 0 );
+      exp_Small->IndexReset( 0 );
+      exp_Mini->IndexReset( 0 );
+      exp_Big->IndexReset( 0 );
+   }
 
+   bool isCaptured()  { return capturar; }
+   void setCaptura(bool state) { this->capturar = state; }
+
+   int  get_Lifes() { return lifes; }
+   void add_Lifes(int pp = 1) { lifes += pp; }
+
+   int  get_Score()  { return score; }
+   void add_Score(int pp = 1) { score += pp;}
 
 protected:
+   bool              capturar = false;
+
    bool              inflated = false;
    bool              exploted = false;
    bool              finished = false;
@@ -344,6 +565,16 @@ protected:
    Image             pad_Mini;
    Image             pad_Big;
 
+   Image             Duplex_Normal;
+   Image             Duplex_Small;
+   Image             Duplex_Mini;
+   Image             Duplex_Big;
+
+   Image             bullet;
+   float             STEPS = 10.0f;
+   float             steps = 0.0f;
+   float             diffx = 0.0f;
+
    ANIMATION         *exp_Normal;
    ANIMATION         *exp_Canon;
    ANIMATION         *exp_Small;
@@ -351,12 +582,13 @@ protected:
    ANIMATION         *exp_Big;
 
 private:
+   int   score =  0;
+   int   lifes = 20;
+
    float ax, bx, cx;
    Sprite *paddle_0 = NULL;
    Sprite *paddle_1 = NULL;
    Sprite *paddle_2 = NULL;
-
-
 
 };
 

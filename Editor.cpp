@@ -62,7 +62,6 @@ void Editor::copyToArray(int level, BLOCK **block, int TOTAL){
   for(int index=0; index < TOTAL; index++){
      colms = index % MAX_COLMS;
      filas = index / MAX_COLMS;
-     //cout << "filas(" << filas << " colms(" << colms << ") " << block[index]->get_idColor() << endl;
      ARRAY_LEVEL[level][filas][colms] = block[(TOTAL -1) -index]->get_idColor();
   }
 }
@@ -76,12 +75,13 @@ void Editor::SaveToTexto(int FILAS){
    if(mySave.is_open()){
       mySave << "GameLevel {" << endl;
       for(int level=0; level < MAX_LEVEL; level++){
-         mySave << "  Level: " << fillZero(2) << level << " filas: " << fillZero(2) << FILAS << endl;
+         mySave << "  Level: " << fillZero(2) << level \
+                << " filas: "  << fillZero(2) << FILAS << endl;
+
          for(int filas=0; filas < MAX_FILAS; filas++){
             mySave << "    " << fillZero(2) << filas << " { ";
             for(int colms=0; colms < MAX_COLMS; colms++){
-               mySave << ARRAY_LEVEL[level][filas][colms] << " ";
-               cout << "level(" << level << ") filas(" << filas << ") colms(" << colms << ")" << endl;
+               mySave << fillZero(2) << ARRAY_LEVEL[level][filas][colms] << " ";
             }
             mySave << " }" << endl;
          }
@@ -121,10 +121,10 @@ void Editor::loadFromFile(){
                for(colms = 0; colms < MAX_COLMS; colms++){
                   myLoad >> idBlock;
                   ARRAY_LEVEL[myLevel][filas][colms] = idBlock;
-                  cout << idBlock <<", ";
+                  //cout << idBlock <<", ";
                }
                myLoad >> buffer;  //. la llave }
-               cout << endl;
+               //cout << endl;
             }
          }
       }
@@ -144,6 +144,7 @@ void Editor::CopyFromArray(int level, BLOCK **block, int TOTAL){
       for(colms=0; colms < MAX_COLMS; colms++){
          idColor = ARRAY_LEVEL[level][filas][colms];
          block[index]->set_idColor(idColor, data_getColors(idColor));
+         block[index]->setActivo(true);
          index--;
       }
    }
@@ -204,7 +205,7 @@ void Editor::Process(RenderWindow *win, Event evn){
 
       } else {
          Wheel += evn.mouseWheel.delta;
-         Wheel  = min( Wheel, NUM_COLORS );
+         Wheel  = min( Wheel, NUM_COLORS -1);
          Wheel  = max( Wheel, 0);
          cout << "Wheel: " << Wheel << endl;
          rcCube.setFillColor( data_getColors(Wheel) );
@@ -257,17 +258,19 @@ void Editor::Process(RenderWindow *win, Event evn){
 
    Guardar->Update(win);
    if(Guardar->isPressed()){
-      cout << "Guardar Archivo" << endl;
-      copyToArray(0, block, TOTAL);
+      SELECTO = ((SELECTO != -1) ? SELECTO : 0);
+      cout << "Guardar Archivo: " << SELECTO << endl;
+      copyToArray(SELECTO, block, TOTAL);
       SaveToTexto();
    }
 
 
    Cargar->Update(win);
    if(Cargar->isPressed()){
-      cout << "Cargar Archivo" << endl;
+      SELECTO = ((SELECTO != -1) ? SELECTO : 0);
+      cout << "Cargar Archivo: " << SELECTO << endl;
       loadFromFile();
-      CopyFromArray(0, block, TOTAL);
+      CopyFromArray(SELECTO, block, TOTAL);
    }
 
 

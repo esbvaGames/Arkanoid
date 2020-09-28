@@ -33,6 +33,7 @@
 					<Add option="-O2" />
 					<Add option="-Winit-self" />
 					<Add option="-std=c++14" />
+					<Add option="-DRELEASED" />
 					<Add directory="../Arkanoid" />
 				</Compiler>
 				<Linker>
