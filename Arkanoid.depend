@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1601305495 source:c:\documents\codeblocks\arkanoid\main.cpp
+1601601267 source:c:\documents\codeblocks\arkanoid\main.cpp
 	"Globals.h"
 	"Animation.h"
 	"Blocks.h"
@@ -8,6 +8,9 @@
 	"Button.h"
 	"Entidad.h"
 	"Editor.hpp"
+	"ScrNames.hpp"
+	"ScrFinal.hpp"
+	"ScrScore.hpp"
 
 1599672137 c:\documents\codeblocks\arkanoid\levels.h
 
@@ -23,7 +26,7 @@
 	"blocks.h"
 	"levels.h"
 
-1601253518 c:\documents\codeblocks\arkanoid\globals.h
+1601600428 c:\documents\codeblocks\arkanoid\globals.h
 	<SFML/Graphics.hpp>
 	<SFML/Window.hpp>
 	<SFML/System.hpp>
@@ -33,25 +36,41 @@
 	<fstream>
 	<map>
 
-1601238339 c:\documents\codeblocks\arkanoid\blocks.h
+1601325192 c:\documents\codeblocks\arkanoid\blocks.h
 
-1601238409 c:\documents\codeblocks\arkanoid\circle.h
+1601325192 c:\documents\codeblocks\arkanoid\circle.h
 
-1601306094 c:\documents\codeblocks\arkanoid\player.h
+1601598807 c:\documents\codeblocks\arkanoid\player.h
 	<math.h>
 
-1599671077 c:\documents\codeblocks\arkanoid\button.h
+1601593579 c:\documents\codeblocks\arkanoid\button.h
 
 1600706087 c:\documents\codeblocks\arkanoid\animation.h
 
-1601238827 c:\documents\codeblocks\arkanoid\entidad.h
+1601325192 c:\documents\codeblocks\arkanoid\entidad.h
 
-1601238333 c:\documents\codeblocks\arkanoid\editor.hpp
+1601325192 c:\documents\codeblocks\arkanoid\editor.hpp
 
-1601244754 source:c:\documents\codeblocks\arkanoid\editor.cpp
+1601325192 source:c:\documents\codeblocks\arkanoid\editor.cpp
 	"Globals.h"
 	"Blocks.h"
 	"Circle.h"
 	"Button.h"
 	"Editor.hpp"
+
+1601333935 source:c:\documents\codeblocks\arkanoid\screen.cpp
+	"Globals.h"
+	"Screen.hpp"
+
+1601327427 c:\documents\codeblocks\arkanoid\screen.h
+
+1601498462 c:\documents\codeblocks\arkanoid\screen.hpp
+
+1601568548 c:\documents\codeblocks\arkanoid\scrname.hpp
+
+1601593711 c:\documents\codeblocks\arkanoid\scrnames.hpp
+
+1601600418 c:\documents\codeblocks\arkanoid\scrfinal.hpp
+
+1601594597 c:\documents\codeblocks\arkanoid\scrscore.hpp
 

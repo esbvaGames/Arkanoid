@@ -39,9 +39,12 @@ enum CForce { forceLeft=1, forceRight, forceTop, forceDown };
    Color colorPressed = Color(0,255,255);
    Color colorPressed_alpha = Color(0,255,255,40);
 
-   int   Puntaje   = 0;
    bool  StartGame = false;
    bool  OpenLevel = false;
+   bool  ScoreView = false;
+   bool  EditNames = false;
+   bool  GameFinish = false;
+
    bool  ModoEditar = false;
    bool  Mouse_in_block = false;
 
@@ -61,9 +64,12 @@ enum CForce { forceLeft=1, forceRight, forceTop, forceDown };
    extern Color colorPressed;
    extern Color colorPressed_alpha;
 
-   extern int Puntaje;
    extern bool StartGame;
    extern bool OpenLevel;
+   extern bool ScoreView;
+   extern bool EditNames;
+   extern bool GameFinish;
+
    extern bool ModoEditar;
    extern bool Mouse_in_block;
 

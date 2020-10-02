@@ -11,6 +11,11 @@
 
 #include "Editor.hpp"
 
+#include "ScrNames.hpp"
+#include "ScrFinal.hpp"
+#include "ScrScore.hpp"
+
+
 map<string, ANIMATION *> TABLA;
 
 using namespace std;
@@ -147,15 +152,16 @@ BLOCK **Create_Blocks(int FILAS, int COLMS, int sx, int sy){
 CIRCLE **Create_Levels(int FILAS, int COLMS, Font font){
     int LEVELS = 8*6;
     int index = 0;
-    char buffer[4]="";
 
     CIRCLE **level = (CIRCLE**) new CIRCLE[LEVELS];
     for(int filas = 0; filas < FILAS; filas++){
         for(int colms = 0; colms < COLMS; colms++){
             level[index] = new CIRCLE(colms*32 +(colms+1)*4 + 568,
                                       filas*32 +(filas+1)*4 + 140);
-            sprintf(buffer,"%02i", index+1);
-            level[index]->setTexto(string(buffer), font);
+            ostringstream buffer;
+            buffer << fillZero(2) << index +1;
+
+            level[index]->setTexto(string(buffer.str()), font);
             index++;
         }
     }
@@ -909,20 +915,20 @@ void Load_Efectos(Image *efecto){
 }
 
 
-void UpdateScore(Text *puntos, int Puntaje){
+void UpdateScore(Text *labScore, int iPuntos){
    ostringstream buffer;
-   buffer << "Puntos: " << setfill('0') << setw(6) << Puntaje;
-   puntos->setString(string(buffer.str()));
+   buffer << "Puntos: " << setfill('0') << setw(6) << iPuntos;
+   labScore->setString(string(buffer.str()));
 }
 
-void UpdateLifes(Text *Lifes, int vidas){
+void UpdateLifes(Text *labLifes, int iLifes){
    ostringstream buffer;
-   buffer << "Vidas.: " << setfill('0') << setw(2) << vidas;
-   Lifes->setString(string(buffer.str()));
+   buffer << "Vidas...: " << setfill('0') << setw(2) << iLifes;
+   labLifes->setString(string(buffer.str()));
 }
 
 
-int main()
+int main(int argv, char *argc[])
 {
     sf::RenderWindow win(sf::VideoMode(800,480), "SFML Arkanoid by esbva");
     //. Solo a 60 cuadros x Segundos
@@ -931,7 +937,6 @@ int main()
 
     #ifdef RELEASED
      Time  delta;
-     int   nivel = 0;
      float tiempo  = 20.0f;
      float retardo =  0.0f;
      int   LIFES   = 0;
@@ -940,6 +945,7 @@ int main()
      delta = seconds(0.1f);
      retardo = delta.asSeconds() + tiempo;
     #endif // RELEASED
+    int   nivel = 0;
 
     //. Rectangulo  de Juego
     RectangleShape rcGame = Create_Rectangle(4,4, 550, 470, colorBorde);
@@ -986,8 +992,10 @@ int main()
 
     //.Requiere la direccion de la fuente, para no copiarla.
     Text titulo   = Create_Label(600, 10, "Arkanoid.-", &font, 30);
-    Text labScore = Create_Label(600, 60, "Puntos: 000000", &font, 20);
-    Text labLifes = Create_Label(600, 90, "Vidas ..: 00", &font, 20);
+    Text labScore = Create_Label(600, 50, "Puntos: 000000", &font, 20);
+    Text labLifes = Create_Label(600, 74, "Vidas : 00", &font, 20);
+
+    BUTTON *btnName = new BUTTON(600,106, 148,25, "Invitado-9878", &font, 16);
 
     //. Lectura de los Fondos y Bordes.
     Image fondos;
@@ -1048,6 +1056,29 @@ int main()
     level[nivel]->Set_Pressed();
     #endif // RELEASED
 
+    ScrScore *DtaScore = new ScrScore(280,218, 400, 290, colorBorde, Color(18,32,40), &font);
+    DtaScore->SetActiva( false );
+
+    NameBox *nombre = new NameBox(280, 240, 200, 100, colorBorde, Color(18,32,40), &font);
+    nombre->setVisible(false);
+
+
+    string KeyName = "Esbva";
+    if(argv > 1){
+      KeyName = argc[1];
+      btnName->SetString(KeyName);
+    }
+
+    if(!DtaScore->inRegister(KeyName)){
+      DtaScore->Player_Nuevo(KeyName, RECORD(0,0));
+    }
+    DtaScore->SetKeyName(KeyName);
+    DtaScore->Clock_Reiniciar();
+
+    //. La Pantalla Final.
+    ScrFinal *GameFinal = new ScrFinal(280,240, 300, 100, Color(255,0,0), Color(98,12,12), &font);
+    GameFinal->setVisible(false);
+
 
 
     while(win.isOpen()){
@@ -1062,6 +1093,42 @@ int main()
             win.close();
          }
 
+         if(btnName->isPressed()){
+            if( !nombre->isVisible()) {
+               EditNames = true;
+               nombre->setVisible( true );
+               nombre->SetString( btnName->GetString() );
+            }
+         } else {
+            btnName->Update(&win);
+         }
+
+         if(nombre->isVisible()){
+            nombre->Update(&win, &evn);
+            if(nombre->isFinish()){
+               if(nombre->isOkey()){
+                  btnName->SetString( nombre->GetString() );
+               }
+               EditNames = false;
+               nombre->setVisible(false);
+               btnName->SetState(BUTTON::STATE::Normal);
+
+               //. Lo guarda en el Registro
+               KeyName = nombre->GetString();
+               if(!DtaScore->inRegister(KeyName)){
+                   DtaScore->Player_Nuevo(KeyName, RECORD(0,0));
+               }
+               DtaScore->SetKeyName(KeyName);
+            }
+         }
+
+         //. Activar Modo-Editar
+         if(Keyboard::isKeyPressed(Keyboard::F12)){
+            ModoEditar = !ModoEditar;   //. Invertir estado (true | false)
+            cout << "ModoEditar: " << ModoEditar << endl;
+         }
+
+         #ifndef RELEASED
          if(Keyboard::isKeyPressed(Keyboard::F4)){
             if(rcDoor_L->getModo() == PUERTA::MODO::Cerrada){
                rcDoor_L->setModo(PUERTA::MODO::Abriendo);
@@ -1078,12 +1145,6 @@ int main()
             bbb->Update();
             bbb->reboteDown();
             BOLAS.push_back(bbb);
-         }
-
-         //. Activar Modo-Editar
-         if(Keyboard::isKeyPressed(Keyboard::F12)){
-            ModoEditar = !ModoEditar;   //. Invertir estado (true | false)
-            cout << "ModoEditar: " << ModoEditar << endl;
          }
 
          //. Prueba para los Bonos
@@ -1106,6 +1167,7 @@ int main()
             EFECTO *efx = MakeEfecto(Vector2f(250,200), Efecto::Colision);
             efx->Display(&win);
          }
+         #endif // RELEASED
 
          if(ModoEditar){
             //.Mouse Rueda (Cambiar de Bloque)
@@ -1119,7 +1181,6 @@ int main()
       win.draw(rcGame);
       win.draw(rcMenu);
 
-      win.draw(titulo);
 
       #ifdef RELEASED
          if(SCORE != rcPlayer->get_Score()){
@@ -1134,6 +1195,8 @@ int main()
          win.draw(rcTop);
          win.draw(rcDown);
       #endif // RELEASED
+
+      win.draw(titulo);
       win.draw(labScore);
       win.draw(labLifes);
 
@@ -1175,7 +1238,16 @@ int main()
                   continue;
                } else {
                   //. Pierde Vidas cuando hay 1 sola BOLA
-                  rcPlayer->add_Lifes(-1);
+                  if(StartGame){
+                     rcPlayer->add_Lifes(-1);
+                     if(rcPlayer->get_Lifes() < 1){
+                        StartGame = false;
+                        DtaScore->Player_Update(KeyName, RECORD(nivel, rcPlayer->get_Score()));
+                        DtaScore->Record_Orden();
+                        DtaScore->SetActiva(true);
+                        ScoreView = true;
+                     }
+                  }
                }
             }
 
@@ -1281,18 +1353,31 @@ int main()
             OpenLevel = false;
             retardo = delta.asSeconds() + tiempo;
 
-            ENTIDADES.clear();
-            CambiarFondo(&rcGame, rand() % 40);
+            if(nivel+1 > 47){
+               StartGame = false;
+               DtaScore->Player_Update(KeyName, RECORD(nivel, rcPlayer->get_Score()));
+               DtaScore->Record_Orden();
+               DtaScore->SetActiva(true);
+             //ScoreView = true;
+               GameFinish = true;
+               GameFinal->setVisible(true);
 
-            level[nivel]->Set_Select();
-            nivel++;
-            level[nivel]->Set_Pressed();
+            } else {
+               ENTIDADES.clear();
+               CambiarFondo(&rcGame, rand() % 40);
 
-            editor->CopyFromArray(nivel, block, TOTAL);
-            rcDoor_L->setModo(PUERTA::MODO::Cerrando);
-            rcDoor_R->setModo(PUERTA::MODO::Cerrando);
-            rcPlayer->ReStart();
-            BOLAS.at(0)->ReStart();
+               level[nivel]->Set_Select();
+               nivel++;
+               level[nivel]->Set_Pressed();
+
+               editor->CopyFromArray(nivel, block, TOTAL);
+               rcDoor_L->setModo(PUERTA::MODO::Cerrando);
+               rcDoor_R->setModo(PUERTA::MODO::Cerrando);
+               rcPlayer->ReStart();
+               BOLAS.clear();
+               BOLAS.push_back(new BOLA(myBola));
+               BOLAS.at(0)->ReStart();
+            }
          }
       }
       #endif // RELEASED
@@ -1389,10 +1474,53 @@ int main()
          laser->Display(&win);
       }
 
+
+      if(DtaScore->isActiva()){
+         DtaScore->Display(&win);
+
+      } else if (ScoreView) {
+         ScoreView = false;
+         DtaScore->SaveScores();
+
+         ENTIDADES.clear();
+         for(int index=0; index<=nivel; index++){
+            level[index]->Set_Normal();
+         }
+         CambiarFondo(&rcGame, 0);
+         editor->CopyFromArray(0, block, TOTAL);
+         level[0]->Set_Pressed();
+
+         rcPlayer->ReStart();
+         BOLAS.clear();
+         BOLAS.push_back(new BOLA(myBola));
+         BOLAS.at(0)->ReStart();
+
+         DtaScore->Clock_Reiniciar();
+      }
+      btnName->Display(&win);
+
+      if(nombre->isVisible()){
+         nombre->Display(&win);
+      }
+
+      if(GameFinal->isVisible()){
+         GameFinal->Display(&win);
+      } else {
+         if(GameFinish){
+            GameFinish = false;
+            ScoreView  = true;
+         }
+      }
+
       win.display();
 
     }
 
-    cout << "Hello world!" << endl;
+    #ifdef RELEASED
+      cout << "Juego terminado: Gracias por jugarlo,  esbva !!" << endl;
+      cout << "ENTER PARA FINALIZAR ... " << endl;
+      getchar();
+    #endif // RELEASED
+
     return 0;
 }

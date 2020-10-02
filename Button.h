@@ -53,8 +53,25 @@ struct BUTTON {
       return (state == STATE::Pressed) ? true : false;
    }
 
-protected:
+   void SetString(string StrName){
+      label.setString(StrName);
+      float bx = (rcButton.getSize().x - label.getLocalBounds().width ) / 2.0f;
+      float by = (rcButton.getSize().y - label.getLocalBounds().height) / 3.5f;
+      label.setPosition(rcButton.getPosition().x + bx, rcButton.getPosition().y + by);
+   }
+
+   string GetString() {
+      return  label.getString().toAnsiString();
+   }
+
    enum  STATE {Normal, Select, Pressed};
+
+   void SetState(STATE state){
+      this->state = state;
+   }
+
+
+protected:
    STATE state = STATE::Normal;
    Text             label;
    Rect<float>      area;

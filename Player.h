@@ -242,6 +242,7 @@ struct PLAYER{
    }
 
    void Update() {
+      if(EditNames){ return; }
       if(Keyboard::isKeyPressed(Keyboard::Space)){
          if( !OpenLevel ){
             StartGame = true;
@@ -363,7 +364,7 @@ struct PLAYER{
                               rcPlayer.getSize().y);
 
       if(myPlayer.intersects(myOther)){
-         diffx = myOther.getPosition().x - px;
+         diffx = myOther.left - px;
          diffx = min(diffx,  2.5f);
          diffx = max(diffx, -2.5f);
          return true;
