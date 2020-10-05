@@ -3,8 +3,8 @@
 
 using namespace sf;
 
-struct ScrFinal {
-
+class ScrFinal {
+   public:
      ScrFinal() {}
 
      ScrFinal(float px, float py, float width, float height, \
@@ -66,26 +66,22 @@ struct ScrFinal {
         }
      }
 
-protected:
-   Vector2f calcOrigen(Text txt){
-      return Vector2f(txt.getLocalBounds().width/2.0f, \
-                      txt.getLocalBounds().height/2.0f);
-   }
+   protected:
+      Vector2f calcOrigen(Text txt){
+         return Vector2f(txt.getLocalBounds().width/2.0f, \
+                         txt.getLocalBounds().height/2.0f);
+      }
 
+   private:
+      bool                 visible = false;
+      Time                 delta;
+      float                lapso;
+      float                PAUSA;
 
-private:
-   bool                 visible = false;
-   Time                 delta;
-   float                lapso;
-   float                PAUSA;
-
-   RectangleShape       rcFondo;
-   Text                 tittle;
-   Text                 texto;
-   Text                 Pausa;
-
-
-
+      RectangleShape       rcFondo;
+      Text                 tittle;
+      Text                 texto;
+      Text                 Pausa;
 };
 
 

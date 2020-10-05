@@ -13,6 +13,7 @@ struct BUTTON {
       label.setFillColor(colorBorde);
       area = Rect<float>(px, py, width, height);
    }
+
    void Update(RenderWindow *win){
       float mx = Mouse::getPosition(*win).x;
       float my = Mouse::getPosition(*win).y;
@@ -61,7 +62,7 @@ struct BUTTON {
    }
 
    string GetString() {
-      return  label.getString().toAnsiString();
+      return  label.getString().toAnsiString();  //. Linux Compatibilidad
    }
 
    enum  STATE {Normal, Select, Pressed};

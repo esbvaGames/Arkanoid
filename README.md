@@ -61,5 +61,8 @@ https://youtu.be/LuYMQBGgW38
 	 
 16. Ajustes y Prueba de de funcionamiento, y cambio de Niveles.-
    https://youtu.be/xmYnaYi5TSQ
+	
+17. Registro de Jugadores, y Tabla General de Puntajes, más Guardado.-
+	https://youtu.be/VIZhQMig-7Q
 	 	 
 by esbva.-

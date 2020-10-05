@@ -10,11 +10,11 @@ struct RECORD {
    int      Nivel   = 0;
    int      Score   = 0;
    long     SECONDS = 0;
-   string   tiempo  ="";
+   string   tiempo  = "00:00:00";
 
    RECORD() {}
 
-   RECORD(const RECORD *Other){
+   RECORD(const RECORD *Other){           //. Llamaca como: new RECORD(&reg)
       *this = *Other;
    }
 
@@ -63,8 +63,8 @@ bool Compare(pair<string, RECORD> a, pair<string, RECORD> b){
 
 
 #ifdef _MAIN_
-  map<string, RECORD> JUGADOR;
-  vector<pair<string, RECORD> > REGISTER;
+  map<string, RECORD> JUGADOR;               //. Nombre de Jugadores y Registro
+  vector<pair<string, RECORD> > REGISTER;    //. Array de Ordenamiento
 
 #else
   extern map<string, RECORD> > JUGADOR;
@@ -100,6 +100,7 @@ class ScrScore
          this->px = px;
          this->py = py;
 
+         //. Si no hay Archivo crea una tabla de Puntajes
          if(!LoadScores()) {
             Player_Nuevo("Jeannise", RECORD(rand()%40, rand()%50000));
             Player_Nuevo("Naomi"   , RECORD(rand()%40, rand()%50000));
@@ -126,6 +127,7 @@ class ScrScore
       }
       string GetKeyName() { return KEYNAME; }
 
+      //. Si el Jugador esta en el Registro (true | false)
       bool inRegister(string KeyName){
          auto it = JUGADOR.find(KeyName);
          if(it == JUGADOR.end()){
@@ -150,6 +152,7 @@ class ScrScore
             return;
          }
          time(&finish);
+         //. Entrega un total de Segundos jugados.-
          reg.SECONDS = difftime(finish, start);
          JUGADOR.at(KeyName) = RECORD(&reg);
       }
@@ -159,9 +162,12 @@ class ScrScore
       }
 
       void Record_Orden() {
+         //. Copia la tabla de Jugadores al Array.-
+         REGISTER.clear();
          for(auto it = JUGADOR.begin(); it != JUGADOR.end(); ++it){
             REGISTER.push_back(make_pair(it->first, it->second));
          }
+         //. Compara el Puntaje y Ordena la Tabla.-
          sort(REGISTER.begin(), REGISTER.end(), Compare);
 
          int index = 0;

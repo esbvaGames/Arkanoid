@@ -1240,7 +1240,7 @@ int main(int argv, char *argc[])
                   //. Pierde Vidas cuando hay 1 sola BOLA
                   if(StartGame){
                      rcPlayer->add_Lifes(-1);
-                     if(rcPlayer->get_Lifes() < 1){
+                     if(rcPlayer->get_Lifes() < 0){
                         StartGame = false;
                         DtaScore->Player_Update(KeyName, RECORD(nivel, rcPlayer->get_Score()));
                         DtaScore->Record_Orden();

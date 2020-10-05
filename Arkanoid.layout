@@ -1,86 +1,76 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_layout_file>
 	<FileVersion major="1" minor="0" />
-	<ActiveTarget name="ReleaseStatic" />
-	<File name="Entidad.h" open="1" top="0" tabpos="9" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<ActiveTarget name="Release" />
+	<File name="Entidad.h" open="1" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="3390" topLine="168" />
+			<Cursor1 position="6037" topLine="174" />
 		</Cursor>
 	</File>
-	<File name="GameLevel.txt" open="0" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="2" zoom_2="0">
+	<File name="ScrFinal.hpp" open="1" top="0" tabpos="12" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="0" topLine="0" />
+			<Cursor1 position="1877" topLine="7" />
 		</Cursor>
 	</File>
-	<File name="Editor.hpp" open="1" top="0" tabpos="11" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="ScrNames.hpp" open="1" top="0" tabpos="11" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="1461" topLine="13" />
+			<Cursor1 position="2960" topLine="83" />
 		</Cursor>
 	</File>
-	<File name="Globals.h" open="1" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="ScrScore.hpp" open="1" top="0" tabpos="10" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="1241" topLine="48" />
+			<Cursor1 position="5017" topLine="330" />
 		</Cursor>
 	</File>
-	<File name="ScrFinal.hpp" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="Editor.hpp" open="1" top="0" tabpos="9" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="926" topLine="54" />
-		</Cursor>
-	</File>
-	<File name="Button.h" open="1" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="2136" topLine="62" />
+			<Cursor1 position="38" topLine="3" />
 		</Cursor>
 	</File>
 	<File name="Circle.h" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="255" topLine="0" />
+			<Cursor1 position="1271" topLine="30" />
 		</Cursor>
 	</File>
-	<File name="main.cpp" open="1" top="1" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="main.cpp" open="1" top="1" tabpos="1" split="0" active="1" splitpos="289" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="48560" topLine="1030" />
+			<Cursor1 position="39458" topLine="1499" />
 		</Cursor>
-		<Folding>
-			<Collapse line="103" />
-			<Collapse line="130" />
-			<Collapse line="151" />
-			<Collapse line="194" />
-			<Collapse line="248" />
-			<Collapse line="342" />
-			<Collapse line="530" />
-			<Collapse line="618" />
-		</Folding>
 	</File>
-	<File name="Blocks.h" open="1" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="GameLevel.txt" open="0" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="2" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="265" topLine="78" />
+			<Cursor1 position="2959" topLine="141" />
 		</Cursor>
 	</File>
-	<File name="Editor.cpp" open="1" top="0" tabpos="10" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="Animation.h" open="1" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="5676" topLine="217" />
+			<Cursor1 position="2267" topLine="98" />
 		</Cursor>
 	</File>
-	<File name="Animation.h" open="1" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="Player.h" open="1" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="2269" topLine="33" />
+			<Cursor1 position="10205" topLine="349" />
 		</Cursor>
 	</File>
-	<File name="ScrNames.hpp" open="0" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="Button.h" open="1" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="40" topLine="0" />
+			<Cursor1 position="605" topLine="57" />
 		</Cursor>
 	</File>
-	<File name="ScrScore.hpp" open="1" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="Blocks.h" open="1" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="10251" topLine="112" />
+			<Cursor1 position="180" topLine="0" />
 		</Cursor>
 	</File>
-	<File name="Player.h" open="1" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="Editor.cpp" open="1" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="6043" topLine="234" />
+			<Cursor1 position="7643" topLine="259" />
 		</Cursor>
 	</File>
-	<EditorTabsLayout layout="0bb3ada05f766678000059a300000002=*0;Arkanoid:main.cpp,1;Arkanoid:ScrFinal.hpp,10;Arkanoid:ScrScore.hpp,2;Arkanoid:Globals.h,3;Arkanoid:Blocks.h,4;Arkanoid:Player.h,5;Arkanoid:Button.h,6;Arkanoid:Animation.h,7;Arkanoid:Entidad.h,8;Arkanoid:Editor.cpp,9;Arkanoid:Editor.hpp@layout2|name=dummy;caption=;state=2098174;dir=3;layer=0;row=0;pos=0;prop=100000;bestw=574;besth=152;minw=574;minh=152;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|name=0bb3ada05f766678000059a300000002;caption=;state=2098172;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=200;besth=200;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|dock_size(5,0,0)=202|" />
+	<File name="Globals.h" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1097" topLine="21" />
+		</Cursor>
+	</File>
+	<EditorTabsLayout layout="0b017d805f7a5ed60000569300000002=*0;Arkanoid:main.cpp,1;Arkanoid:Globals.h,2;Arkanoid:Blocks.h,3;Arkanoid:Player.h,4;Arkanoid:Button.h,5;Arkanoid:Animation.h,6;Arkanoid:Entidad.h,7;Arkanoid:Editor.cpp,8;Arkanoid:Editor.hpp,9;Arkanoid:ScrScore.hpp,10;Arkanoid:ScrNames.hpp,11;Arkanoid:ScrFinal.hpp@layout2|name=dummy;caption=;state=2098174;dir=3;layer=0;row=0;pos=0;prop=100000;bestw=574;besth=211;minw=574;minh=211;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|name=0b017d805f7a5ed60000569300000002;caption=;state=2098172;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=200;besth=200;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|dock_size(5,0,0)=202|" />
 </CodeBlocks_layout_file>
