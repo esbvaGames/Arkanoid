@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1601850455 source:c:\documents\codeblocks\arkanoid\main.cpp
+1601913932 source:c:\documents\codeblocks\arkanoid\main.cpp
 	"Globals.h"
 	"Animation.h"
 	"Blocks.h"
@@ -11,6 +11,7 @@
 	"ScrNames.hpp"
 	"ScrFinal.hpp"
 	"ScrScore.hpp"
+	"ScrMusic.hpp"
 
 1599672137 c:\documents\codeblocks\arkanoid\levels.h
 
@@ -26,10 +27,11 @@
 	"blocks.h"
 	"levels.h"
 
-1601849717 c:\documents\codeblocks\arkanoid\globals.h
+1601910726 c:\documents\codeblocks\arkanoid\globals.h
 	<SFML/Graphics.hpp>
 	<SFML/Window.hpp>
 	<SFML/System.hpp>
+	<SFML/Audio.hpp>
 	<iostream>
 	<iomanip>
 	<sstream>
@@ -73,4 +75,6 @@
 1601850455 c:\documents\codeblocks\arkanoid\scrfinal.hpp
 
 1601857363 c:\documents\codeblocks\arkanoid\scrscore.hpp
+
+1601913044 c:\documents\codeblocks\arkanoid\scrmusic.hpp
 

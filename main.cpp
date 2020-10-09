@@ -14,6 +14,7 @@
 #include "ScrNames.hpp"
 #include "ScrFinal.hpp"
 #include "ScrScore.hpp"
+#include "ScrMusic.hpp"
 
 
 map<string, ANIMATION *> TABLA;
@@ -971,7 +972,7 @@ int main(int argv, char *argc[])
     BOLAS.push_back(myBola);
 
     Font font;
-    if( !font.loadFromFile("./acme.ttf")){
+    if( !font.loadFromFile("./assets/acme.ttf")){
         cout << "Error leyendo fuente: Acme.ttf";
     }
 
@@ -999,7 +1000,7 @@ int main(int argv, char *argc[])
 
     //. Lectura de los Fondos y Bordes.
     Image fondos;
-    if( !fondos.loadFromFile("./arinoid.png")){
+    if( !fondos.loadFromFile("./assets/arinoid.png")){
        cout << "Error leyendo Fondos: arinoid.png" << endl;
     }
     Load_Fondos(&fondos, 4, 10, 64);
@@ -1015,7 +1016,7 @@ int main(int argv, char *argc[])
 
 
     Image puertas;
-    if( !puertas.loadFromFile("./Doors_18x42.png")){
+    if( !puertas.loadFromFile("./assets/Doors_18x42.png")){
        cout << "Error leyendo Doors_18x42.png" << endl;
     }
     Load_Puertas(&puertas);
@@ -1030,7 +1031,7 @@ int main(int argv, char *argc[])
 
     //. Prueba de Animaciones Bonus ///
     Image imagen;
-    if( !imagen.loadFromFile("./PowerUps.png")){
+    if( !imagen.loadFromFile("./assets/PowerUps.png")){
       cout << "Error leyendo imagen: PowerUps.bmp" << endl;
     }
     imagen.createMaskFromColor(Color(0,0,0),0);
@@ -1038,14 +1039,14 @@ int main(int argv, char *argc[])
 
     //. Animaciones de Enemigos;
     Image enemies;
-    if( !enemies.loadFromFile("./Enemies.png")){
+    if( !enemies.loadFromFile("./assets/Enemies.png")){
       cout << "Error leyendo Enemies: Enemies.png" << endl;
     }
     Load_Enemies(&enemies);
 
     //. Explosiones y otros efectos
     Image effect;
-    if( !effect.loadFromFile("./Efectos.png")) {
+    if( !effect.loadFromFile("./assets/Efectos.png")) {
       cout << "Error leyendo Efectos: Efectos.png" << endl;
     }
     Load_Efectos(&effect);
@@ -1066,8 +1067,8 @@ int main(int argv, char *argc[])
     string KeyName = "Esbva";
     if(argv > 1){
       KeyName = argc[1];
-      btnName->SetString(KeyName);
     }
+    btnName->SetString(KeyName);
 
     if(!DtaScore->inRegister(KeyName)){
       DtaScore->Player_Nuevo(KeyName, RECORD(0,0));
@@ -1079,9 +1080,10 @@ int main(int argv, char *argc[])
     ScrFinal *GameFinal = new ScrFinal(280,240, 300, 100, Color(255,0,0), Color(98,12,12), &font);
     GameFinal->setVisible(false);
 
-
+    ScrMusic *musica = new ScrMusic();
 
     while(win.isOpen()){
+      musica->play();
 
       sf::Event  evn;                   //. Receptor de Eventos
       while( win.pollEvent(evn) ) {
@@ -1515,6 +1517,7 @@ int main(int argv, char *argc[])
       win.display();
 
     }
+    musica->stop();
 
     #ifdef RELEASED
       cout << "Juego terminado: Gracias por jugarlo,  esbva !!" << endl;
