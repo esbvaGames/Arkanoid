@@ -11,7 +11,7 @@ Sample on SFML
 	Ocultamiento de Bloques Colisionados.
 https://youtu.be/XfMk0BRhn58
 
-04. Modo de Edici髇 de Niveles, Definici髇 Tabla de Colores, 
+04. Modo de Edici贸n de Niveles, Definici贸n Tabla de Colores, 
 	Grabar Archivo, Cargar Archivo.-
 https://youtu.be/I4fVAu6DmBE
 
@@ -23,11 +23,11 @@ https://youtu.be/LuYMQBGgW38
 	https://youtu.be/9xSdYdNClq8
 
 07. Ajuste y Prueba de Texturas Animadas, ENTIDADES: Bonos y Enemigos,
-	Definici髇 de Comandos por Bonus (Command_Bonus).-
+	Definici贸n de Comandos por Bonus (Command_Bonus).-
 	https://youtu.be/47KPJMmd_W8
 
 08. Ajuste y Recorde de Bonus y Enemigos, Registro en TABLA Global.
-	Definici髇 de Enumeracion y Nombre, Manejo de excepttiones.
+	Definici贸n de Enumeracion y Nombre, Manejo de excepttiones.
 	Prueba de Generacion masiva de Bonus Instanciados.
 	Prueba de Generacion masiva de Enemigos Instanciados.
 	https://youtu.be/xQlVKOj_5GA
@@ -55,14 +55,18 @@ https://youtu.be/LuYMQBGgW38
 	 Compuertas Mini, Cambio de Imagenes y Animacion
 	 https://youtu.be/Youu5jFjvAQ
 	 
-15. Simulaci髇 del Playe Inflado, adicional de 3 paletas que se mueven con 
-	 retardo, a la posici髇 principal.-
+15. Simulaci贸n del Playe Inflado, adicional de 3 paletas que se mueven con 
+	 retardo, a la posici贸n principal.-
 	 https://youtu.be/Dxq11LE2SaE
 	 
 16. Ajustes y Prueba de de funcionamiento, y cambio de Niveles.-
    https://youtu.be/xmYnaYi5TSQ
 	
-17. Registro de Jugadores, y Tabla General de Puntajes, m醩 Guardado.-
+17. Registro de Jugadores, y Tabla General de Puntajes, m谩s Guardado.-
 	https://youtu.be/VIZhQMig-7Q
+
+Versi贸n Exportada a Android. 
+https://www.mediafire.com/download/n1hft6zzuegs179
 	 	 
 by esbva.-
+
