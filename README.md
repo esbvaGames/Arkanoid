@@ -67,6 +67,10 @@ https://youtu.be/LuYMQBGgW38
 
 Versión Exportada a Android. 
 https://www.mediafire.com/download/n1hft6zzuegs179
-	 	 
+
+Enlace Versión con librería Estática, Windows
+https://www.mediafire.com/download/g4w9vuuz600ubkc 
+
+	 
 by esbva.-
 
